@@ -341,3 +341,15 @@ Subproject A is complete when:
 - The browser contract suite runs against the fake driver and Playwright adapter.
 - Trace, screenshot, console, page-error, request-failure, and HTTP-error behavior is preserved.
 - Unsupported hidden capabilities fail explicitly instead of silently degrading.
+
+## 17. Foundation Status
+
+- [x] Contract validation and error taxonomy
+- [x] Fake driver and shared conformance suite
+- [x] Playwright snapshot normalization
+- [x] Playwright actions with stale-ref detection
+- [x] Playwright conditions and normalized events
+- [x] Playwright session lifecycle and registry
+- [x] Playwright conformance and public-demo smoke tests
+- [ ] Production engine migration
+- [ ] Removal of the legacy Playwright path

@@ -68,6 +68,7 @@ export function createFakeBrowserSession(initialState = {}) {
 
     return {
         backend: 'fake',
+        conformanceBaseUrl: url,
         capabilities: {
             trace: true,
             pageErrors: true,

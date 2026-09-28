@@ -50,7 +50,7 @@
     - `validateSnapshot(snapshot): PageSnapshot`
     - `assertCapability(capabilities, name): void`
 
-- [ ] **Step 1: Write the failing validation tests**
+- [x] **Step 1: Write the failing validation tests**
 
 ```js
 import test from 'node:test';
@@ -136,7 +136,7 @@ test('capability assertions fail closed', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and verify they fail**
+- [x] **Step 2: Run the tests and verify they fail**
 
 Run:
 
@@ -146,7 +146,7 @@ node --test tests/browser-contract-validation.test.mjs
 
 Expected: FAIL because `lib/browser/contract.mjs` does not exist.
 
-- [ ] **Step 3: Implement the contract module**
+- [x] **Step 3: Implement the contract module**
 
 ```js
 const COMMAND_KINDS = new Set([
@@ -254,7 +254,7 @@ export function assertCapability(capabilities, name) {
 }
 ```
 
-- [ ] **Step 4: Run the validation tests**
+- [x] **Step 4: Run the validation tests**
 
 Run:
 
@@ -264,7 +264,7 @@ node --test tests/browser-contract-validation.test.mjs
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Run the full suite and commit**
+- [x] **Step 5: Run the full suite and commit**
 
 Run:
 
@@ -291,7 +291,7 @@ git commit -m "feat: add browser driver contract validation"
     - `createFakeBrowserSession(initialState?)`
     - `registerBrowserConformanceTests(name, createSession)`
 
-- [ ] **Step 1: Write the failing conformance test**
+- [x] **Step 1: Write the failing conformance test**
 
 ```js
 import { registerBrowserConformanceTests } from './browser-conformance.mjs';
@@ -300,7 +300,7 @@ import { createFakeBrowserSession } from './fakes/fake-browser-driver.mjs';
 registerBrowserConformanceTests('fake', async () => createFakeBrowserSession());
 ```
 
-- [ ] **Step 2: Run the test and verify it fails**
+- [x] **Step 2: Run the test and verify it fails**
 
 Run:
 
@@ -310,7 +310,7 @@ node --test tests/browser-fake-driver.test.mjs
 
 Expected: FAIL because the helper modules do not exist.
 
-- [ ] **Step 3: Implement the fake driver**
+- [x] **Step 3: Implement the fake driver**
 
 ```js
 import {
@@ -434,7 +434,7 @@ export function createFakeBrowserSession(initialState = {}) {
 }
 ```
 
-- [ ] **Step 4: Implement the conformance suite**
+- [x] **Step 4: Implement the conformance suite**
 
 ```js
 import test from 'node:test';
@@ -470,7 +470,7 @@ export function registerBrowserConformanceTests(name, createSession) {
 }
 ```
 
-- [ ] **Step 5: Run the fake conformance test**
+- [x] **Step 5: Run the fake conformance test**
 
 Run:
 
@@ -480,7 +480,7 @@ node --test tests/browser-fake-driver.test.mjs
 
 Expected: PASS, 4 conformance tests.
 
-- [ ] **Step 6: Run the full suite and commit**
+- [x] **Step 6: Run the full suite and commit**
 
 Run:
 
@@ -505,7 +505,7 @@ git commit -m "test: add browser driver conformance harness"
 - Consumes: `validateSnapshot(snapshot)` from Task 1.
 - Produces: `snapshotPlaywrightPage(page, options?): Promise<PageSnapshot>`.
 
-- [ ] **Step 1: Write the failing Playwright snapshot test**
+- [x] **Step 1: Write the failing Playwright snapshot test**
 
 ```js
 import test from 'node:test';
@@ -593,7 +593,7 @@ await new Promise((resolve) => server.close(resolve));
 }
 });
 
-- [ ] **Step 2: Run the test and verify it fails**
+- [x] **Step 2: Run the test and verify it fails**
 
 Run:
 
@@ -603,7 +603,7 @@ node --test tests/browser-playwright-snapshot.test.mjs
 
 Expected: FAIL because `snapshotPlaywrightPage` does not exist.
 
-- [ ] **Step 3: Move the current observation implementation**
+- [x] **Step 3: Move the current observation implementation**
 
 Move the existing `observe(page)` body from `lib/dom.mjs` into:
 
@@ -634,7 +634,7 @@ const snapshot = { url: page.url(), controls: normalizedControls, frames };
 return validateSnapshot(snapshot);
 ```
 
-- [ ] **Step 4: Keep the old import working**
+- [x] **Step 4: Keep the old import working**
 
 Change `lib/dom.mjs` so existing callers do not change in this task:
 
@@ -649,7 +649,7 @@ export async function observe(page) {
 
 Leave `score`, `discoverRowLabels`, `target`, `settle`, and `assertionTarget` in `lib/dom.mjs` for the later engine migration plan.
 
-- [ ] **Step 5: Run snapshot and existing DOM tests**
+- [x] **Step 5: Run snapshot and existing DOM tests**
 
 Run:
 
@@ -660,7 +660,7 @@ npm test
 
 Expected: all tests PASS. If an old test fails, fix the extraction without changing its semantics.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/browser/playwright-snapshot.mjs lib/dom.mjs tests/browser-playwright-snapshot.test.mjs
@@ -682,7 +682,7 @@ git commit -m "refactor: extract playwright snapshot adapter"
 - Consumes: `validateCommand(command)` and the snapshot refs produced by Task 3.
 - Produces: `executePlaywrightCommand(page, refs, command): Promise<ActionResult>`.
 
-- [ ] **Step 1: Write the failing action tests**
+- [x] **Step 1: Write the failing action tests**
 
 ```js
 import test from 'node:test';
@@ -760,7 +760,7 @@ test('stale refs fail explicitly', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and verify they fail**
+- [x] **Step 2: Run the tests and verify they fail**
 
 Run:
 
@@ -770,7 +770,7 @@ node --test tests/browser-playwright-actions.test.mjs
 
 Expected: FAIL because `executePlaywrightCommand` does not exist.
 
-- [ ] **Step 3: Record the snapshot generation in each control**
+- [x] **Step 3: Record the snapshot generation in each control**
 
 In `lib/browser/playwright-snapshot.mjs`, add `snapshotNonce` to the returned snapshot and copy it into every control:
 
@@ -786,7 +786,7 @@ return validateSnapshot(snapshot);
 
 The refs map passed to actions maps `control.ref` to the control containing `snapshotNonce`.
 
-- [ ] **Step 4: Implement action translation**
+- [x] **Step 4: Implement action translation**
 
 ```js
 import { BrowserContractError, validateCommand } from './contract.mjs';
@@ -827,7 +827,7 @@ export async function executePlaywrightCommand(page, refs, rawCommand) {
 
 The `frames` array must match the frame order used by `page.frames()` at snapshot creation.
 
-- [ ] **Step 5: Run the action tests and existing retry tests**
+- [x] **Step 5: Run the action tests and existing retry tests**
 
 Run:
 
@@ -838,7 +838,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/browser/playwright-actions.mjs lib/browser/playwright-snapshot.mjs tests/browser-playwright-actions.test.mjs
@@ -863,7 +863,7 @@ git commit -m "feat: add playwright browser actions"
     - `waitForPlaywrightCondition(page, condition, options): Promise<WaitResult>`
     - `attachPlaywrightEvents(page, context): { events: BrowserEvent[], subscribe(listener): () => void }`
 
-- [ ] **Step 1: Write failing condition tests**
+- [x] **Step 1: Write failing condition tests**
 
 ```js
 import test from 'node:test';
@@ -898,7 +898,7 @@ test('control state resolves a semantic query at wait time', async () => {
 });
 ```
 
-- [ ] **Step 2: Write failing event tests**
+- [x] **Step 2: Write failing event tests**
 
 ```js
 import test from 'node:test';
@@ -918,7 +918,7 @@ test('events redact URLs and secrets', () => {
 });
 ```
 
-- [ ] **Step 3: Run the condition and event tests to verify they fail**
+- [x] **Step 3: Run the condition and event tests to verify they fail**
 
 Run:
 
@@ -928,7 +928,7 @@ node --test tests/browser-playwright-conditions.test.mjs tests/browser-playwrigh
 
 Expected: FAIL because the modules do not exist.
 
-- [ ] **Step 4: Implement condition resolution**
+- [x] **Step 4: Implement condition resolution**
 
 ```js
 import { BrowserContractError, validateCondition } from './contract.mjs';
@@ -997,7 +997,7 @@ export async function waitForPlaywrightCondition(page, rawCondition, options = {
 
 Implement `tableHeaders`, `rowCount`, and `formError` with the existing Playwright locator behavior from `lib/engine.mjs`, but return only the normalized result. Do not call a model in any condition.
 
-- [ ] **Step 5: Implement normalized events**
+- [x] **Step 5: Implement normalized events**
 
 ```js
 import { safeText, safeUrl } from '../diagnostics.mjs';
@@ -1051,7 +1051,7 @@ export function attachPlaywrightEvents(page, context) {
 }
 ```
 
-- [ ] **Step 6: Run tests and commit**
+- [x] **Step 6: Run tests and commit**
 
 Run:
 
@@ -1087,7 +1087,7 @@ git commit -m "feat: add playwright browser conditions and events"
     - `createBrowserSession(config)`
     - `openBrowserSession(config)` compatibility export
 
-- [ ] **Step 1: Write the failing lifecycle test**
+- [x] **Step 1: Write the failing lifecycle test**
 
 ```js
 import test from 'node:test';
@@ -1121,7 +1121,7 @@ test('Playwright driver implements start, navigate, snapshot, action and close',
 });
 ```
 
-- [ ] **Step 2: Run the test and verify it fails**
+- [x] **Step 2: Run the test and verify it fails**
 
 Run:
 
@@ -1131,7 +1131,7 @@ node --test tests/browser-playwright-driver.test.mjs
 
 Expected: FAIL because `createPlaywrightBrowserSession` does not exist.
 
-- [ ] **Step 3: Implement the Playwright session**
+- [x] **Step 3: Implement the Playwright session**
 
 ```js
 import fs from 'node:fs/promises';
@@ -1220,7 +1220,7 @@ export function createPlaywrightBrowserSession(config) {
 
 `startTrace` stores the requested trace path on the session, and `stopTrace` writes to that exact path. Do not write `trace.zip` into the repository root.
 
-- [ ] **Step 4: Implement registry and compatibility export**
+- [x] **Step 4: Implement registry and compatibility export**
 
 ```js
 // lib/browser/registry.mjs
@@ -1250,7 +1250,7 @@ export async function openBrowserSession(config) {
 
 Keep the existing `openBrowser()` function unchanged so production callers remain compatible in this plan.
 
-- [ ] **Step 5: Run lifecycle and compatibility tests**
+- [x] **Step 5: Run lifecycle and compatibility tests**
 
 Run:
 
@@ -1261,7 +1261,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/browser/playwright-driver.mjs lib/browser/registry.mjs lib/browser-provider.mjs tests/browser-playwright-driver.test.mjs
@@ -1285,7 +1285,7 @@ git commit -m "feat: add playwright browser driver session"
 - Consumes: all modules from Tasks 1 through 6.
 - Produces: one conformance suite that both the fake and Playwright drivers pass, plus a public-demo smoke test.
 
-- [ ] **Step 1: Update the conformance suite to close sessions and exercise conditions**
+- [x] **Step 1: Update the conformance suite to close sessions and exercise conditions**
 
 ```js
 export function registerBrowserConformanceTests(name, createSession) {
@@ -1326,7 +1326,7 @@ export function registerBrowserConformanceTests(name, createSession) {
 
 The Playwright fixture must provide a visible textbox and serve it over `http://127.0.0.1`. Do not use `data:` URLs for the shared contract suite.
 
-- [ ] **Step 2: Register Playwright with the same suite**
+- [x] **Step 2: Register Playwright with the same suite**
 
 ```js
 import { registerBrowserConformanceTests } from './browser-conformance.mjs';
@@ -1366,7 +1366,7 @@ export async function createTestBrowserSession() {
 }
 ```
 
-- [ ] **Step 3: Add a public-demo smoke test**
+- [x] **Step 3: Add a public-demo smoke test**
 
 ```js
 import test from 'node:test';
@@ -1393,7 +1393,7 @@ test('Playwright driver can observe and query the public demo', async (t) => {
 });
 ```
 
-- [ ] **Step 4: Update architecture documentation**
+- [x] **Step 4: Update architecture documentation**
 
 Add to `docs/architecture.md`:
 
@@ -1406,7 +1406,7 @@ completes; `openBrowserSession()` is the additive entry point for the new contra
 
 Mark the acceptance checklist in `docs/superpowers/specs/2026-09-28-browser-driver-design.md` as partially complete only for the foundation. Do not claim engine migration is complete.
 
-- [ ] **Step 5: Run all tests and the public demo smoke**
+- [x] **Step 5: Run all tests and the public demo smoke**
 
 Run:
 
@@ -1418,7 +1418,7 @@ npm run format:check
 
 Expected: all tests PASS and formatting is clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/browser-conformance.mjs tests/browser-playwright-conformance.test.mjs tests/browser-public-demo.test.mjs tests/helpers/playwright-test-session.mjs docs/architecture.md docs/superpowers/specs/2026-09-28-browser-driver-design.md
