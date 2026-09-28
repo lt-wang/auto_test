@@ -34,7 +34,7 @@ test('conditions require semantic queries and valid states', () => {
     );
     assert.throws(
         () => validateCondition({ kind: 'controlState', ref: 'r1', state: 'disabled' }),
-        /query/,
+        (error) => error instanceof BrowserContractError && error.code === 'invalid-contract',
     );
 });
 

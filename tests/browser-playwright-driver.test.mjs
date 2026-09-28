@@ -27,3 +27,21 @@ test('Playwright driver implements start, navigate, snapshot, action and close',
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('startup failure closes the launched browser', async () => {
+    let closed = false;
+    const fakeBrowser = {
+        async newContext() {
+            throw new Error('context failed');
+        },
+        async close() {
+            closed = true;
+        },
+    };
+    const session = createPlaywrightBrowserSession(
+        { headless: true },
+        { chromium: { launch: async () => fakeBrowser } },
+    );
+    await assert.rejects(session.start(), (error) => error.code === 'browser-startup');
+    assert.equal(closed, true);
+});

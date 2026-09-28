@@ -9,7 +9,6 @@ const defaultControls = () => [
     {
         ref: 'name',
         frameRef: 'f0',
-        frameIndex: 0,
         tag: 'input',
         role: 'textbox',
         name: '客户名称',
@@ -31,7 +30,6 @@ const defaultControls = () => [
     {
         ref: 'save',
         frameRef: 'f0',
-        frameIndex: 0,
         tag: 'button',
         role: 'button',
         name: '保存',

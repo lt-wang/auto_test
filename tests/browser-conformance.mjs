@@ -11,6 +11,43 @@ export function registerBrowserConformanceTests(name, createSession) {
         assert.equal(new URL(await session.currentUrl()).pathname, '/next');
     });
 
+    test(`${name}: reports capabilities`, async (t) => {
+        const session = await createSession();
+        t.after(() => session.close());
+        for (const [capability, supported] of Object.entries(session.capabilities))
+            assert.equal(typeof supported, 'boolean', `${capability} must be boolean`);
+    });
+
+    test(`${name}: snapshot matches the public contract shape`, async (t) => {
+        const session = await createSession();
+        t.after(() => session.close());
+        await session.start();
+        const snapshot = await session.snapshot();
+        assert.deepEqual(Object.keys(snapshot).sort(), [
+            'controls',
+            'modal',
+            'observedAt',
+            'tables',
+            'title',
+            'url',
+        ]);
+        assert.ok(snapshot.controls.every((control) => !Object.hasOwn(control, 'frameIndex')));
+        assert.ok(snapshot.controls.every((control) => !Object.hasOwn(control, 'snapshotNonce')));
+        assert.equal(
+            new Set(snapshot.controls.map((control) => control.ref)).size,
+            snapshot.controls.length,
+        );
+    });
+
+    test(`${name}: unknown refs fail explicitly`, async (t) => {
+        const session = await createSession();
+        t.after(() => session.close());
+        await session.start();
+        await assert.rejects(session.act({ kind: 'click', ref: 'missing-ref' }), (error) =>
+            ['missing-ref', 'stale-ref'].includes(error.code),
+        );
+    });
+
     test(`${name}: snapshot returns stable control refs`, async (t) => {
         const session = await createSession();
         t.after(() => session.close());
