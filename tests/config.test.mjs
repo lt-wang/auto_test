@@ -63,6 +63,17 @@ test('project config rejects credentials and unknown keys', async () => {
         assert.equal((await loadProjectConfig(file)).provider, 'local');
         await fs.writeFile(
             file,
+            JSON.stringify({
+                provider: 'local',
+                generation: { allowedOperations: ['create', 'search'], cleanup: 'never' },
+            }),
+        );
+        assert.deepEqual((await loadProjectConfig(file)).generation.allowedOperations, [
+            'create',
+            'search',
+        ]);
+        await fs.writeFile(
+            file,
             JSON.stringify({ url: 'http://127.0.0.1:8765/customers', password: 'secret' }),
         );
         await assert.rejects(loadProjectConfig(file), /Unknown config keys: password/);

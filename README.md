@@ -85,6 +85,22 @@ Jev 使用 TypeSafe `/v1/systemone` typed-decision 接口，不是 Chat Completi
 
 本地模式默认使用 `convaiinnovations/laya-multilingual`；可以设置 `LAYA_MODEL=/path/to/model` 和 `LAYA_PYTHON=/path/to/python`。浏览器默认是 Playwright 自带 Chromium；安装本机 Chrome 后可选 `--browser-channel chrome`。`--browser-provider` 当前仅接受 `playwright`，其它值会明确报错。`--template-excel` 可指定已有的 17 列模板；不指定时生成项目自带的同列结构，不引用任何个人文件。
 
+可以在 `config.local.json` 中配置生成范围：
+
+```json
+{
+    "generation": {
+        "allowedOperations": ["create", "search", "view", "edit", "delete"],
+        "cleanup": "delete-case",
+        "recordPrefix": "LayaAuto",
+        "maxRecords": 100,
+        "allowedDataKeys": ["recordName"]
+    }
+}
+```
+
+`allowedOperations` 控制允许生成的流程；`cleanup` 支持 `delete-case` 或 `never`；`allowedDataKeys` 限制 `--data` 中允许使用的 fixture 字段。政策禁止的写入不会执行。
+
 运行证据默认写入 `runs/`，生成文件默认写入 `generated-cases/`，两者均不纳入 Git。生成的 Excel 和报告可能含目标 URL、页面文本或测试数据，公开前请自行检查。完整 CLI 参数运行 `./run.sh --help`。
 
 ## 开发与限制

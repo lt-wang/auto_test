@@ -6,5 +6,24 @@
     "browserProvider": "playwright",
     "browserChannel": "",
     "headless": false,
-    "language": "auto"
+    "language": "auto",
+    "generation": {
+        "allowedOperations": [
+            "tabs",
+            "tab-switch",
+            "table",
+            "filters",
+            "form-validation",
+            "form-invalid",
+            "create",
+            "search",
+            "view",
+            "edit",
+            "delete"
+        ],
+        "cleanup": "delete-case",
+        "recordPrefix": "LayaAuto",
+        "maxRecords": 100,
+        "allowedDataKeys": []
+    }
 }

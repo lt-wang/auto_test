@@ -85,6 +85,22 @@ Jev uses TypeSafe's `/v1/systemone` typed-decision API, not Chat Completions. Th
 
 Local mode defaults to `convaiinnovations/laya-multilingual`; set `LAYA_MODEL=/path/to/model` and `LAYA_PYTHON=/path/to/python` to override it. The browser defaults to Playwright's bundled Chromium; `--browser-channel chrome` uses a separately installed Chrome. `--browser-provider` currently accepts only `playwright` and rejects unsupported values. `--template-excel` can supply a matching 17-column workbook; otherwise the tool creates one without relying on a personal file.
 
+Generation scope can be configured in `config.local.json`:
+
+```json
+{
+    "generation": {
+        "allowedOperations": ["create", "search", "view", "edit", "delete"],
+        "cleanup": "delete-case",
+        "recordPrefix": "LayaAuto",
+        "maxRecords": 100,
+        "allowedDataKeys": ["recordName"]
+    }
+}
+```
+
+`allowedOperations` controls generated flows, `cleanup` accepts `delete-case` or `never`, and `allowedDataKeys` limits fixture keys accepted from `--data`. Operations denied by policy fail before browser actions run.
+
 Run artifacts go to ignored `runs/` and generated workbooks to ignored `generated-cases/`. Reports and workbooks may contain test URLs, page text or test data; review them before sharing. Run `./run.sh --help` for CLI options.
 
 ## Development and limitations

@@ -18,37 +18,37 @@
 
 **Files:** `lib/generation-policy.mjs`, `tests/generation-policy.test.mjs`
 
-- [ ] Test defaults, validation, operation denial, safe record names, record limits, fixture keys, and cleanup.
-- [ ] Run the focused test and confirm the module is missing.
-- [ ] Implement `createGenerationPolicy(input, options)` and `GenerationPolicy`.
-- [ ] Run focused and full tests; commit.
+- [x] Test defaults, validation, operation denial, safe record names, record limits, fixture keys, and cleanup.
+- [x] Run the focused test and confirm the module is missing.
+- [x] Implement `createGenerationPolicy(input, options)` and `GenerationPolicy`.
+- [x] Run focused and full tests; commit.
 
 ## Task 2: Workflow enforcement
 
 **Files:** `lib/workflow.mjs`, `tests/generation-policy-workflow.test.mjs`
 
-- [ ] Test denied operations generate coverage entries without executing browser actions.
-- [ ] Test record prefix and max-record enforcement.
-- [ ] Test cleanup mode `never` skips delete generation.
-- [ ] Test fixture keys outside `allowedDataKeys` fail closed.
-- [ ] Integrate policy into `Workflow.generate()` and `Workflow.resolve()`.
-- [ ] Run focused, retry, workflow tests and full suite; commit.
+- [x] Test denied operations generate coverage entries without executing browser actions.
+- [x] Test record prefix and max-record enforcement.
+- [x] Test cleanup mode `never` skips delete generation.
+- [x] Test fixture keys outside `allowedDataKeys` fail closed.
+- [x] Integrate policy into `Workflow.generate()` and `Workflow.resolve()`.
+- [x] Run focused, retry, workflow tests and full suite; commit.
 
 ## Task 3: Engine write guard
 
 **Files:** `lib/engine.mjs`, `tests/guards.test.mjs`
 
-- [ ] Test that `GenerationPolicy` can deny writes even when `allowWrite` is true.
-- [ ] Keep read-only behavior and action/step mismatch checks.
-- [ ] Integrate policy through `Engine.guard()`.
-- [ ] Run focused and full tests; commit.
+- [x] Test that `GenerationPolicy` can deny writes even when `allowWrite` is true.
+- [x] Keep read-only behavior and action/step mismatch checks.
+- [x] Integrate policy through `Engine.guard()`.
+- [x] Run focused and full tests; commit.
 
 ## Task 4: CLI, config, and docs
 
 **Files:** `runner.mjs`, `lib/workflow.mjs`, `lib/project-config.mjs`, `config.example.json`, `README.md`, `README.en.md`, `ROADMAP.md`, `ROADMAP.en.md`, `tests/config.test.mjs`
 
-- [ ] Test `generation` config is accepted and invalid keys fail.
-- [ ] Parse policy after CLI/config precedence and pass it to workflow and engine.
-- [ ] Document the supported policy fields.
-- [ ] Run all Node/Python tests and formatting checks.
-- [ ] Commit and push.
+- [x] Test `generation` config is accepted and invalid keys fail.
+- [x] Parse policy after CLI/config precedence and pass it to workflow and engine.
+- [x] Document the supported policy fields.
+- [x] Run all Node/Python tests and formatting checks.
+- [x] Commit and push.

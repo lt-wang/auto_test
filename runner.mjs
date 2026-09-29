@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 import { Laya } from './lib/model.mjs';
+import { createGenerationPolicy } from './lib/generation-policy.mjs';
 import { openBrowser } from './lib/browser-provider.mjs';
 import {
     loadLocalEnvironment,
@@ -66,6 +67,9 @@ const config = {
     runId,
     out: path.resolve(option('--out', 'TEST_OUTPUT', 'out', path.join(ROOT, 'runs', runId))),
 };
+config.generationPolicy = createGenerationPolicy(fileConfig.generation, {
+    allowWrite: config.allowWrite,
+});
 async function secret(label = '登录密码', envName = 'TEST_PASSWORD') {
     if (process.env[envName]) return process.env[envName];
     if (!process.stdin.isTTY) throw Error('需要交互终端输入' + label + '，或设置' + envName);
