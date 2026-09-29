@@ -74,6 +74,15 @@ export LAYA_API_KEY='your-secret-key'
 ./run.sh --mode generate --provider api --url 'https://your-test-app.example/module' --manual-login
 ```
 
+```bash
+export TYPESAFE_API_KEY='your-typesafe-key'
+# 可选：export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+# 可选：export TYPESAFE_DEFAULT_MODEL='jev-latest'
+./run.sh --mode generate --provider jev --url 'https://your-test-app.example/module' --manual-login
+```
+
+Jev 使用 TypeSafe `/v1/systemone` typed-decision 接口，不是 Chat Completions。响应中的具体模型 ID 会写入决策日志。
+
 本地模式默认使用 `convaiinnovations/laya-multilingual`；可以设置 `LAYA_MODEL=/path/to/model` 和 `LAYA_PYTHON=/path/to/python`。浏览器默认是 Playwright 自带 Chromium；安装本机 Chrome 后可选 `--browser-channel chrome`。`--browser-provider` 当前仅接受 `playwright`，其它值会明确报错。`--template-excel` 可指定已有的 17 列模板；不指定时生成项目自带的同列结构，不引用任何个人文件。
 
 运行证据默认写入 `runs/`，生成文件默认写入 `generated-cases/`，两者均不纳入 Git。生成的 Excel 和报告可能含目标 URL、页面文本或测试数据，公开前请自行检查。完整 CLI 参数运行 `./run.sh --help`。

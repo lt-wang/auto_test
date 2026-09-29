@@ -11,3 +11,5 @@ The workbook contract is in `lib/workflow_excel.py`. The visible 17 columns are 
 Current UI coverage is strongest for semantic HTML plus Ant Design, Element and TNTD conventions. A new component family should extend observation and form rules, then add a browser fixture test. Keep company-specific selectors, URLs, credentials and data preparation in a separate private adapter repository rather than this public core.
 
 The browser contract foundation lives in `lib/browser/`. It provides normalized snapshots, opaque refs, semantic commands and conditions, capability reporting, and normalized events. The production engines still use the legacy Playwright path until the separate engine migration plan completes; `openBrowserSession()` is the additive entry point for the new contract.
+
+Jev decisions use `lib/decision/jev-provider.mjs` and the official `@typesafe-ai/sdk`. The provider boundary validates choice/probability responses before the engine sees them.

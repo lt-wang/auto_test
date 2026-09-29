@@ -107,3 +107,39 @@ test('unimplemented browser backends fail before opening a browser', async () =>
         /Unsupported browser provider/,
     );
 });
+
+test('TypeSafe Jev environment variables are accepted without entering JSON config', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'laya-pilot-jev-env-'));
+    const keys = ['TYPESAFE_API_KEY', 'TYPESAFE_BASE_URL', 'TYPESAFE_DEFAULT_MODEL'];
+    const prior = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+    try {
+        for (const key of keys) delete process.env[key];
+        await fs.writeFile(
+            path.join(dir, '.env.local'),
+            'TYPESAFE_API_KEY=jev-secret\nTYPESAFE_BASE_URL=https://api.typesafe.ai\nTYPESAFE_DEFAULT_MODEL=jev-latest\n',
+        );
+        await loadLocalEnvironment(dir);
+        assert.equal(process.env.TYPESAFE_API_KEY, 'jev-secret');
+        assert.equal(process.env.TYPESAFE_BASE_URL, 'https://api.typesafe.ai');
+        assert.equal(process.env.TYPESAFE_DEFAULT_MODEL, 'jev-latest');
+
+        const file = path.join(dir, 'config.json');
+        await fs.writeFile(
+            file,
+            JSON.stringify({
+                provider: 'jev',
+                jevBase: 'https://api.typesafe.ai',
+                jevModel: 'jev-latest',
+            }),
+        );
+        assert.equal((await loadProjectConfig(file)).provider, 'jev');
+        await fs.writeFile(file, JSON.stringify({ provider: 'jev', typesafeApiKey: 'secret' }));
+        await assert.rejects(loadProjectConfig(file), /Unknown config keys: typesafeApiKey/);
+    } finally {
+        for (const key of keys) {
+            if (prior[key] === undefined) delete process.env[key];
+            else process.env[key] = prior[key];
+        }
+        await fs.rm(dir, { recursive: true, force: true });
+    }
+});

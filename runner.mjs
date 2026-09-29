@@ -37,6 +37,8 @@ const config = {
     apiBase: option('--api-base', 'LAYA_API_BASE', 'apiBase', ''),
     apiModel: option('--api-model', 'LAYA_API_MODEL', 'apiModel', ''),
     apiTimeout: Number(option('--api-timeout', 'LAYA_API_TIMEOUT', 'apiTimeout', 30000)),
+    jevBase: option('--jev-base', 'TYPESAFE_BASE_URL', 'jevBase', 'https://api.typesafe.ai'),
+    jevModel: option('--jev-model', 'TYPESAFE_DEFAULT_MODEL', 'jevModel', 'jev-latest'),
     browserProvider: option(
         '--browser-provider',
         'BROWSER_PROVIDER',
@@ -113,11 +115,21 @@ async function report(results, laya, source, warnings) {
         import_warnings: warnings,
         mode: config.headless ? 'headless' : 'headed',
         provider: config.provider,
-        model: config.provider === 'api' ? config.apiModel : config.model,
+        model:
+            config.provider === 'api'
+                ? config.apiModel
+                : config.provider === 'jev'
+                  ? config.jevModel
+                  : config.model,
         ...(config.provider === 'api' ? { api_base: config.apiBase } : {}),
+        ...(config.provider === 'jev' ? { jev_base: config.jevBase } : {}),
         engine:
             '通用DOM候选 + ' +
-            (config.provider === 'api' ? 'API Laya' : '本地Laya') +
+            (config.provider === 'api'
+                ? 'API Laya'
+                : config.provider === 'jev'
+                  ? 'TypeSafe Jev'
+                  : '本地Laya') +
             '选择 + 确定性断言',
         counts,
         metrics: {
@@ -180,13 +192,13 @@ let laya, browser, activePage;
 async function main() {
     if (flag('--help')) {
         console.log(
-            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api；--browser-provider playwright；--browser-channel chrome|chromium；--headless。API地址和模型名称需自行配置，密钥由LAYA_API_KEY或隐藏输入提供。',
+            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
         );
         return;
     }
     if (!config.excel && !arg('--mode', '')) throw Error('请通过--excel指定用例文件');
-    if (!['local', 'api'].includes(config.provider))
-        throw Error('--provider仅支持local或api，默认local');
+    if (!['local', 'api', 'jev'].includes(config.provider))
+        throw Error('--provider仅支持local、api或jev，默认local');
     if (config.provider === 'api' && (!config.apiBase || !config.apiModel))
         throw Error('API模式需配置 LAYA_API_BASE 和 LAYA_API_MODEL');
     if (config.browserProvider !== 'playwright')
@@ -235,7 +247,9 @@ async function main() {
     let apiKey =
         config.provider === 'api' && !config.dryRun
             ? await secret('API密钥', 'LAYA_API_KEY')
-            : undefined;
+            : config.provider === 'jev' && !config.dryRun
+              ? await secret('TypeSafe API密钥', 'TYPESAFE_API_KEY')
+              : undefined;
     laya = new Laya(
         config.python,
         path.join(ROOT, 'worker.py'),
@@ -243,8 +257,8 @@ async function main() {
         path.join(config.out, 'decisions.ndjson'),
         {
             provider: config.dryRun ? 'local' : config.provider,
-            base: config.apiBase,
-            model: config.apiModel,
+            base: config.provider === 'jev' ? config.jevBase : config.apiBase,
+            model: config.provider === 'jev' ? config.jevModel : config.apiModel,
             key: apiKey,
             timeout: config.apiTimeout,
         },
@@ -322,11 +336,17 @@ async function main() {
     console.log(
         config.provider === 'api'
             ? '使用API Laya：' + config.apiModel + ' @ ' + config.apiBase + '（不加载本地模型）'
-            : '加载本地Laya...',
+            : config.provider === 'jev'
+              ? '使用TypeSafe Jev：' +
+                config.jevModel +
+                ' @ ' +
+                config.jevBase +
+                '（不加载本地模型）'
+              : '加载本地Laya...',
     );
     const loaded = await laya.request({ action: 'load' });
     console.log(
-        (config.provider === 'api' ? 'API连接验证完成 ' : '本地模型已加载 ') +
+        (config.provider === 'local' ? '本地模型已加载 ' : '模型服务验证完成 ') +
             loaded.load_ms +
             'ms',
     );

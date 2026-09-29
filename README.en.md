@@ -74,6 +74,15 @@ export LAYA_API_KEY='your-secret-key'
 ./run.sh --mode generate --provider api --url 'https://your-test-app.example/module' --manual-login
 ```
 
+```bash
+export TYPESAFE_API_KEY='your-typesafe-key'
+# Optional: export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+# Optional: export TYPESAFE_DEFAULT_MODEL='jev-latest'
+./run.sh --mode generate --provider jev --url 'https://your-test-app.example/module' --manual-login
+```
+
+Jev uses TypeSafe's `/v1/systemone` typed-decision API, not Chat Completions. The concrete model ID returned by the service is written to decision logs.
+
 Local mode defaults to `convaiinnovations/laya-multilingual`; set `LAYA_MODEL=/path/to/model` and `LAYA_PYTHON=/path/to/python` to override it. The browser defaults to Playwright's bundled Chromium; `--browser-channel chrome` uses a separately installed Chrome. `--browser-provider` currently accepts only `playwright` and rejects unsupported values. `--template-excel` can supply a matching 17-column workbook; otherwise the tool creates one without relying on a personal file.
 
 Run artifacts go to ignored `runs/` and generated workbooks to ignored `generated-cases/`. Reports and workbooks may contain test URLs, page text or test data; review them before sharing. Run `./run.sh --help` for CLI options.

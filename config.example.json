@@ -1,6 +1,8 @@
 {
     "url": "http://127.0.0.1:8765/customers",
     "provider": "local",
+    "jevBase": "https://api.typesafe.ai",
+    "jevModel": "jev-latest",
     "browserProvider": "playwright",
     "browserChannel": "",
     "headless": false,
