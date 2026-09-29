@@ -212,3 +212,35 @@ test('public snapshot exposes the normalized shape without internal objects', as
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('Playwright snapshot exposes form validation metadata', async () => {
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(`
+            <label for="email">邮箱</label>
+            <input id="email" name="email" required autocomplete="email">
+            <script>
+                const input = document.getElementById('email');
+                input.setCustomValidity('请输入邮箱');
+            </script>
+        `);
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+        const { port } = server.address();
+        await page.goto(`http://127.0.0.1:${port}/`);
+        const snapshot = await snapshotPlaywrightPage(page);
+        const email = snapshot.controls.find((control) => control.name === '邮箱');
+        assert.equal(email.required, true);
+        assert.equal(email.invalid, true);
+        assert.equal(email.validationMessage, '请输入邮箱');
+        assert.equal(email.id, 'email');
+        assert.equal(email.htmlName, 'email');
+        assert.equal(email.autocomplete, 'email');
+    } finally {
+        await browser.close();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});
