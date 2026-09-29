@@ -19,3 +19,5 @@ models/
 storage-state*.json
 test-results/
 playwright-report/
+
+.superpowers/
