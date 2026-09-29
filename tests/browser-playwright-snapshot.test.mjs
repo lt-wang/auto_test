@@ -293,3 +293,29 @@ test('snapshot keeps controls outside tables unbound from row keys', async () =>
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('snapshot preserves explicit row keys on non-tbody rows', async () => {
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(`
+            <table>
+                <thead>
+                    <tr data-row-key="head"><th><button>Sort</button></th></tr>
+                </thead>
+            </table>
+        `);
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+        const { port } = server.address();
+        await page.goto(`http://127.0.0.1:${port}/`);
+        const snapshot = await snapshotPlaywrightPage(page);
+        const button = snapshot.controls.find((control) => control.name === 'Sort');
+        assert.equal(button.rowKey, 'head');
+    } finally {
+        await browser.close();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});

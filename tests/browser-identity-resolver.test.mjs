@@ -22,7 +22,10 @@ test('returns an empty key when the control is not in a table row', () => {
     assert.equal(resolveRowKey({ rowText: 'alert', tableIndex: 0, rowIndex: -1 }), '');
 });
 
-test('does not use explicit row identity when an explicit sentinel says there is no row', () => {
-    assert.equal(resolveRowKey({ dataRowKey: 'customer-7', tableIndex: -1, rowIndex: 0 }), '');
-    assert.equal(resolveRowKey({ testId: 'row-8', tableIndex: 0, rowIndex: -1 }), '');
+test('prefers explicit row identity without positional row metadata', () => {
+    assert.equal(
+        resolveRowKey({ dataRowKey: 'customer-7', tableIndex: -1, rowIndex: 0 }),
+        'customer-7',
+    );
+    assert.equal(resolveRowKey({ testId: 'row-8', tableIndex: 0, rowIndex: -1 }), 'row-8');
 });
