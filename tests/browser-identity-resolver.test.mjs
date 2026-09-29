@@ -15,3 +15,14 @@ test('synthetic row keys include table and row position', () => {
     assert.match(first, /^table-0:row-1:/);
     assert.equal(stableHash('abc'), stableHash('abc'));
 });
+
+test('returns an empty key when the control is not in a table row', () => {
+    assert.equal(resolveRowKey({}), '');
+    assert.equal(resolveRowKey({ rowText: 'alert', tableIndex: -1, rowIndex: 0 }), '');
+    assert.equal(resolveRowKey({ rowText: 'alert', tableIndex: 0, rowIndex: -1 }), '');
+});
+
+test('does not use explicit row identity when an explicit sentinel says there is no row', () => {
+    assert.equal(resolveRowKey({ dataRowKey: 'customer-7', tableIndex: -1, rowIndex: 0 }), '');
+    assert.equal(resolveRowKey({ testId: 'row-8', tableIndex: 0, rowIndex: -1 }), '');
+});
