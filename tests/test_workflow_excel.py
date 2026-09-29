@@ -192,5 +192,35 @@ class WorkbookTests(unittest.TestCase):
             )
 
 
+    def test_read_editable_reports_visible_changes_without_losing_hidden_case(self):
+        with tempfile.TemporaryDirectory(prefix='laya-excel-') as directory:
+            source = str(Path(directory) / 'editable.xlsx')
+            case = {
+                'id': '001',
+                'operation': 'table',
+                'steps': [{'kind': 'assert-headers', 'value': ['名称']}],
+            }
+            excel.write(
+                {
+                    'path': source,
+                    'file': {
+                        'schemaVersion': 1,
+                        'generatedAt': 'test',
+                        'moduleUrl': 'https://app.test/records',
+                        'coverage': [],
+                        'cases': [case],
+                    },
+                }
+            )
+            book = excel.load_workbook(source)
+            book['生成用例'].cell(2, 9).value = '修改后的步骤'
+            book.save(source)
+            book.close()
+            editable = excel.read_editable({'path': source})
+            self.assertEqual(editable['rows'][0]['id'], '001')
+            self.assertTrue(editable['rows'][0]['changed'])
+            self.assertEqual(editable['rows'][0]['case'], case)
+
+
 if __name__ == '__main__':
     unittest.main()

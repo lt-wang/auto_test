@@ -270,6 +270,37 @@ def read(payload):
     }
 
 
+def read_editable(payload):
+    book = load_workbook(payload['path'], read_only=False, data_only=False)
+    if META not in book or book[META].sheet_state not in ('hidden', 'veryHidden'):
+        raise ValueError('没有隐藏的 Laya 回放步骤，不能执行重新绑定')
+    sheet = book['生成用例']
+    if [sheet.cell(1, i).value for i in range(1, 18)] != HEADERS:
+        raise ValueError('生成用例表头已改变，无法重新绑定')
+    meta = book[META]
+    header = json.loads(meta['A1'].value)
+    rows = []
+    for row in range(3, meta.max_row + 1):
+        case_id, saved_hash, recipe = [meta.cell(row, col).value for col in (1, 2, 3)]
+        visible_row = row - 1
+        fields = visible_fields(sheet, visible_row)
+        rows.append(
+            {
+                'id': case_id,
+                'visible': fields,
+                'changed': digest(fields) != saved_hash,
+                'case': json.loads(recipe),
+            }
+        )
+    book.close()
+    return {
+        'schemaVersion': header['schemaVersion'],
+        'moduleUrl': header['moduleUrl'],
+        'coverage': header.get('coverage', []),
+        'rows': rows,
+    }
+
+
 def results(payload):
     book = load_workbook(payload['path'])
     sheet = book['生成用例']
@@ -342,7 +373,12 @@ if __name__ == '__main__':
             stream.reconfigure(encoding='utf-8')
     try:
         data = json.load(sys.stdin)
-        result = {'write': write, 'read': read, 'results': results}[sys.argv[1]](data)
+        result = {
+            'write': write,
+            'read': read,
+            'read_editable': read_editable,
+            'results': results,
+        }[sys.argv[1]](data)
         # The Node parent consumes JSON, so ASCII escapes avoid Windows console codepages.
         print(json.dumps(result, ensure_ascii=True))
     except Exception as exc:

@@ -63,6 +63,8 @@ const config = {
     minMargin: Number(arg('--min-margin', '0.18')),
     cases: arg('--cases', '').split(',').filter(Boolean),
     data: {},
+    bindings: option('--bindings', 'TEST_BINDINGS', 'bindings', ''),
+    output: option('--output', 'TEST_OUTPUT_FILE', 'output', ''),
     runId,
     out: path.resolve(option('--out', 'TEST_OUTPUT', 'out', path.join(ROOT, 'runs', runId))),
 };
@@ -195,7 +197,7 @@ let laya, browser, activePage;
 async function main() {
     if (flag('--help')) {
         console.log(
-            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright|browser-use；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
+            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n重新绑定：./run.sh --mode rebind --case-file 用例.xlsx --bindings bindings.json [--output 新用例.xlsx]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright|browser-use；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
         );
         return;
     }
@@ -243,6 +245,13 @@ async function main() {
             'templateExcel',
             config.excel || '',
         );
+        if (workflowMode === 'rebind') {
+            const { runRebind } = await import('./lib/rebind.mjs');
+            await fs.mkdir(config.out, { recursive: true });
+            const result = await runRebind(config);
+            console.log('RESULT ' + JSON.stringify(result));
+            return result;
+        }
         const { runWorkflow } = await import('./lib/workflow.mjs');
         return runWorkflow(config, workflowMode, secret, ROOT);
     }
