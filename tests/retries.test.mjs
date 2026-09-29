@@ -150,8 +150,11 @@ test('unconfirmed writes stay failed after three attempts and never resend', asy
 test('write verification requires matching page, successful request and expected record', async () => {
     const { workflow, page } = setup();
     workflow.attemptState = { writeSequence: 0 };
-    workflow.snapshot = async () => ({ controls: [{ name: '新增' }] });
-    page.locator = () => ({ filter: () => ({ count: async () => 1 }) });
+    workflow.startUrl = await workflow.browser.currentUrl();
+    workflow.snapshot = async () => ({
+        controls: [{ name: '新增' }],
+        tables: [{ headers: ['名称'], rows: [[workflow.variables.recordName]] }],
+    });
     const step = { purpose: 'save' };
     assert.equal(await workflow.verifyWrite(step), false);
     workflow.pendingWrites.completed.push({ sequence: 1, status: 200, failed: false });

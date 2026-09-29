@@ -351,5 +351,5 @@ Subproject A is complete when:
 - [x] Playwright conditions and normalized events
 - [x] Playwright session lifecycle and registry
 - [x] Playwright conformance and public-demo smoke tests
-- [ ] Production engine migration
-- [ ] Removal of the legacy Playwright path
+- [x] Production engine migration
+- [x] Legacy production-path removal; Playwright compatibility remains isolated under `lib/browser/playwright-*`

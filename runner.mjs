@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 import { Laya } from './lib/model.mjs';
 import { createGenerationPolicy } from './lib/generation-policy.mjs';
-import { openBrowser } from './lib/browser-provider.mjs';
+import { openBrowserSession } from './lib/browser-provider.mjs';
 import {
     loadLocalEnvironment,
     loadProjectConfig,
@@ -14,7 +14,6 @@ import {
 import { Engine } from './lib/engine.mjs';
 import { describe, expectation, lines } from './lib/language.mjs';
 import { settle } from './lib/dom.mjs';
-import { switchLanguage } from './lib/readiness.mjs';
 const ROOT = path.dirname(fileURLToPath(import.meta.url)),
     args = process.argv.slice(2);
 const arg = (n, d) => {
@@ -354,35 +353,38 @@ async function main() {
             loaded.load_ms +
             'ms',
     );
-    const { browser: opened, context, page } = await openBrowser(config);
-    browser = opened;
-    activePage = page;
-    const engine = new Engine(page, laya, config);
+    browser = await openBrowserSession(config);
+    activePage = browser;
+    const engine = new Engine(browser, laya, config);
     await engine.navigate(config.url);
+    const passwords = async () =>
+        (await browser.snapshot()).controls.filter(
+            (control) => control.role === 'password' && control.visible,
+        );
     if (config.manualLogin) {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         await rl.question('请在浏览器完成登录，回到终端按回车继续：');
         rl.close();
         await engine.navigate(config.url);
-        config.authenticated = (await page.locator('input[type="password"]:visible').count()) === 0;
+        config.authenticated = (await passwords()).length === 0;
     } else if (password) {
-        await page.locator('input[type="password"]:visible').first().waitFor({ timeout: 30000 });
-        console.log('页面语言：' + (await switchLanguage(page, config.language)));
+        const fields = await passwords();
+        if (fields.length !== 1) throw Error('登录页存在多个密码框，请用--manual-login');
         const account = await engine.chooseTarget('账号 Account Username', 'fill');
         await account.locator.fill(config.user);
-        const passwords = page.locator('input[type="password"]:visible');
-        if ((await passwords.count()) !== 1)
-            throw Error('登录页存在多个密码框，请用--manual-login');
-        await passwords.fill(password);
+        await browser.act({ kind: 'fill', ref: fields[0].ref, value: password });
         password = null;
         const button = await engine.chooseTarget('登录 Login Sign in');
         await button.locator.click();
-        await passwords.waitFor({ state: 'hidden', timeout: 30000 });
+        const started = Date.now();
+        while ((await passwords()).length && Date.now() - started < 30000)
+            await browser.settle(100);
+        if ((await passwords()).length) throw Error('登录后密码框仍然可见');
         await engine.navigate(config.url);
         config.authenticated = true;
     }
     // Never record login/password entry in Playwright traces.
-    await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+    await browser.startTrace(path.join(config.out, 'trace.zip'));
     const results = [];
     // A login portal is not necessarily the module under test. Use only an
     // explicit, full menu path from the selected Excel, never an invented route.
@@ -395,7 +397,7 @@ async function main() {
     if (entry) {
         console.log('进入Excel指定模块：' + entry);
         await engine.step(entry);
-        config.url = page.url();
+        config.url = await browser.currentUrl();
         console.log('本轮模块地址：' + config.url);
     }
     for (const [index, c] of selected.entries()) {
@@ -428,7 +430,7 @@ async function main() {
             break;
         }
     }
-    await context.tracing.stop({ path: path.join(config.out, 'trace.zip') });
+    await browser.stopTrace();
     const summary = await report(results, laya, input.cases.length, input.warnings);
     console.log(
         'RESULT ' +
@@ -441,7 +443,7 @@ async function main() {
     laya.close();
     if (config.keepOpen) {
         console.log('浏览器保留，关闭窗口后退出。');
-        await new Promise((resolve) => browser.on('disconnected', resolve));
+        await new Promise((resolve) => process.once('SIGINT', resolve));
     } else await browser.close();
 }
 main().catch(async (e) => {
@@ -458,9 +460,7 @@ main().catch(async (e) => {
         )
         .catch(() => {});
     if (activePage)
-        await activePage
-            .screenshot({ path: path.join(config.out, '启动失败.png') })
-            .catch(() => {});
+        await activePage?.screenshot?.(path.join(config.out, '启动失败.png')).catch(() => {});
     laya?.close();
     await browser?.close().catch(() => {});
     process.exitCode = 1;

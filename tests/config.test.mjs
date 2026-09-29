@@ -9,7 +9,7 @@ import {
     loadProjectConfig,
     loadLocalEnvironment,
 } from '../lib/project-config.mjs';
-import { openBrowser } from '../lib/browser-provider.mjs';
+import { openBrowserSession } from '../lib/browser-provider.mjs';
 
 test('CLI, environment, config and defaults have explicit precedence', () => {
     const arg = (name) => (name === '--url' ? 'https://cli.example/test' : undefined);
@@ -114,7 +114,7 @@ test('local environment is parsed without evaluating shell code, and shell value
 
 test('unimplemented browser backends fail before opening a browser', async () => {
     await assert.rejects(
-        openBrowser({ browserProvider: 'browser-use' }),
+        openBrowserSession({ browserProvider: 'browser-use' }),
         /Unsupported browser provider/,
     );
 });
