@@ -4,6 +4,10 @@ import fs from 'node:fs/promises';
 const port = Number(process.env.PORT || 8765);
 const html = await fs.readFile(new URL('./demo.html', import.meta.url), 'utf8');
 const components = await fs.readFile(new URL('./components.html', import.meta.url), 'utf8');
+const mantineComponents = await fs.readFile(
+    new URL('./mantine-components.html', import.meta.url),
+    'utf8',
+);
 http.createServer((req, res) => {
     if (req.url === '/favicon.ico') {
         res.writeHead(204);
@@ -13,6 +17,11 @@ http.createServer((req, res) => {
     if (req.url === '/components') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(components);
+        return;
+    }
+    if (req.url === '/mantine-components') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(mantineComponents);
         return;
     }
     if (req.url === '/api/save-fail') {

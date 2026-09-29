@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <title>Mantine Adapter Fixture</title>
+    </head>
+    <body>
+        <button id="open-modal">打开编辑弹窗</button>
+        <div id="portal-root"></div>
+        <script>
+            const portal = document.getElementById('portal-root');
+            document.getElementById('open-modal').addEventListener('click', () => {
+                const modal = document.createElement('section');
+                modal.id = 'edit-modal';
+                modal.className = 'mantine-Modal-content';
+                modal.setAttribute('role', 'dialog');
+                modal.setAttribute('aria-modal', 'true');
+                modal.setAttribute('aria-label', '编辑客户');
+                modal.innerHTML = `
+                    <button id="select-status" role="combobox" aria-haspopup="listbox" aria-label="状态" aria-expanded="false">未选择</button>
+                    <button id="open-menu" aria-haspopup="menu">更多</button>
+                    <label for="deadline">截止日期</label>
+                    <input id="deadline" aria-describedby="deadline-error">
+                    <div id="deadline-error" class="mantine-InputWrapper-error">日期无效</div>
+                `;
+                portal.append(modal);
+
+                const status = modal.querySelector('#select-status');
+                const options = document.createElement('div');
+                options.id = 'status-options';
+                options.className = 'mantine-Select-dropdown';
+                options.setAttribute('role', 'listbox');
+                options.innerHTML =
+                    '<div role="option">待处理</div><div role="option">已完成</div>';
+                options.hidden = true;
+                portal.append(options);
+                status.addEventListener('click', () => {
+                    const willOpen = options.hidden === true;
+                    options.hidden = !willOpen;
+                    status.setAttribute('aria-expanded', String(willOpen));
+                });
+
+                const menuButton = modal.querySelector('#open-menu');
+                const menu = document.createElement('div');
+                menu.id = 'row-menu';
+                menu.className = 'mantine-Menu-dropdown';
+                menu.setAttribute('role', 'menu');
+                menu.innerHTML =
+                    '<button role="menuitem">编辑</button><button role="menuitem">删除</button>';
+                menu.hidden = true;
+                portal.append(menu);
+                menuButton.addEventListener('click', () => {
+                    menu.hidden = !menu.hidden;
+                });
+            });
+        </script>
+    </body>
+</html>
