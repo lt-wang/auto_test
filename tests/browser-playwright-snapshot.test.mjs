@@ -244,3 +244,32 @@ test('Playwright snapshot exposes form validation metadata', async () => {
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('snapshot synthesizes row keys for native tables without data-row-key', async () => {
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(`
+            <table>
+                <tbody>
+                    <tr><td>张三</td><td><button>查看</button></td></tr>
+                    <tr><td>张三</td><td><button>查看</button></td></tr>
+                </tbody>
+            </table>
+        `);
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+        const { port } = server.address();
+        await page.goto(`http://127.0.0.1:${port}/`);
+        const snapshot = await snapshotPlaywrightPage(page);
+        const buttons = snapshot.controls.filter((control) => control.name === '查看');
+        assert.equal(buttons.length, 2);
+        assert.equal(new Set(buttons.map((control) => control.rowKey)).size, 2);
+        assert.ok(buttons.every((control) => control.rowKey.startsWith('table-0:row-')));
+    } finally {
+        await browser.close();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});
