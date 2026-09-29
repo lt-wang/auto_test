@@ -4,6 +4,9 @@ import os, sys, json, time, contextlib, re
 
 os.environ.setdefault('USE_TF', '0')
 os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
+for stream in (sys.stdin, sys.stdout, sys.stderr):
+    if hasattr(stream, 'reconfigure'):
+        stream.reconfigure(encoding='utf-8')
 ALIASES = {
     'id': ['测试编号', '用例编号', '编号', 'caseid', 'id'],
     'title': ['测试用例名称', '测试用例', '用例名称', '标题', 'title', 'name', 'testcase'],

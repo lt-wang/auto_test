@@ -1,4 +1,8 @@
 import importlib.util
+import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -65,6 +69,127 @@ class WorkbookTests(unittest.TestCase):
             self.assertNotIn('\x00', note)
             self.assertEqual(book['生成用例'].cell(2, 11).value, 'fail')
             book.close()
+
+    def test_unpaired_surrogates_are_cleaned_before_excel_write(self):
+        with tempfile.TemporaryDirectory(prefix='laya-excel-') as directory:
+            source = str(Path(directory) / 'surrogate.xlsx')
+            case = {
+                'id': '001',
+                'operation': 'form-validation',
+                'steps': [
+                    {
+                        'kind': 'assert-disabled',
+                        'target': {'name': 'save\ud800', 'role': 'button'},
+                    }
+                ],
+            }
+            excel.write(
+                {
+                    'path': source,
+                    'file': {
+                        'schemaVersion': 1,
+                        'generatedAt': 'test',
+                        'moduleUrl': 'https://app.test/records',
+                        'coverage': [{'reason': 'bad\udfff'}],
+                        'cases': [case],
+                    },
+                }
+            )
+            loaded = excel.read({'path': source})
+            name = loaded['cases'][0]['steps'][0]['target']['name']
+            self.assertNotIn('\ud800', name)
+            self.assertTrue(name.startswith('save'))
+
+    def test_cli_output_is_safe_under_windows_gbk_console_encoding(self):
+        with tempfile.TemporaryDirectory(prefix='laya-excel-') as directory:
+            source = str(Path(directory) / 'cli.xlsx')
+            case = {
+                'id': '001',
+                'operation': 'form-validation',
+                'steps': [
+                    {
+                        'kind': 'assert-disabled',
+                        'target': {'name': 'save\ud800', 'role': 'button'},
+                    }
+                ],
+            }
+            excel.write(
+                {
+                    'path': source,
+                    'file': {
+                        'schemaVersion': 1,
+                        'generatedAt': 'test',
+                        'moduleUrl': 'https://app.test/records',
+                        'coverage': [],
+                        'cases': [case],
+                    },
+                }
+            )
+            script = Path(excel.__file__).resolve()
+            env = {**os.environ, 'PYTHONIOENCODING': 'gbk'}
+            completed = subprocess.run(
+                [sys.executable, str(script), 'read'],
+                input=json.dumps({'path': source}),
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                env=env,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            loaded = json.loads(completed.stdout)
+            self.assertEqual(loaded['cases'][0]['id'], '001')
+
+    def test_cli_roundtrip_preserves_chinese_under_windows_console_encoding(self):
+        with tempfile.TemporaryDirectory(prefix='laya-excel-') as directory:
+            source = str(Path(directory) / 'roundtrip.xlsx')
+            case = {
+                'id': '001',
+                'operation': 'form-validation',
+                'steps': [
+                    {
+                        'kind': 'assert-disabled',
+                        'target': {'name': '\u4fdd\u5b58\u6309\u94ae', 'role': 'button'},
+                    }
+                ],
+            }
+            script = Path(excel.__file__).resolve()
+            env = {**os.environ, 'PYTHONIOENCODING': 'gbk'}
+            write_request = {
+                'path': source,
+                'file': {
+                    'schemaVersion': 1,
+                    'generatedAt': 'test',
+                    'moduleUrl': 'https://app.test/records',
+                    'coverage': [],
+                    'cases': [case],
+                },
+            }
+            written = subprocess.run(
+                [sys.executable, str(script), 'write'],
+                input=json.dumps(write_request, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                env=env,
+                check=False,
+            )
+            self.assertEqual(written.returncode, 0, written.stderr)
+            loaded_result = subprocess.run(
+                [sys.executable, str(script), 'read'],
+                input=json.dumps({'path': source}, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                env=env,
+                check=False,
+            )
+            self.assertEqual(loaded_result.returncode, 0, loaded_result.stderr)
+            loaded = json.loads(loaded_result.stdout)
+            self.assertEqual(
+                loaded['cases'][0]['steps'][0]['target']['name'],
+                '\u4fdd\u5b58\u6309\u94ae',
+            )
 
 
 if __name__ == '__main__':

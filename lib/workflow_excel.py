@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.utils import get_column_letter
 
 
@@ -50,7 +51,16 @@ OPERATIONS = {'create': '新增', 'search': '查询', 'view': '查看', 'edit': 
 
 
 def cell_text(value):
-    return '' if value is None else str(value)
+    return '' if value is None else clean_text(str(value))
+
+
+def clean_text(value):
+    if not isinstance(value, str):
+        return value
+    value = ILLEGAL_CHARACTERS_RE.sub('', value)
+    # JavaScript UTF-16 slicing can leave a lone surrogate at a truncation boundary.
+    # Replacing it before hashing or writing keeps XLSX/XML encoding valid.
+    return ''.join('\ufffd' if 0xD800 <= ord(char) <= 0xDFFF else char for char in value)
 
 
 def visible_fields(sheet, row):
@@ -133,10 +143,8 @@ def write(payload):
     file = payload['file']
     # 失败原因常含 ANSI 转义序列（\u001b[2m 等）与其它控制字符，openpyxl 会抛
     # IllegalCharacterError 并把整个用例文件写出炸掉。统一在入口清洗。
-    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-
     def clean(v):
-        return ILLEGAL_CHARACTERS_RE.sub('', v) if isinstance(v, str) else v
+        return clean_text(v)
 
     source, old = load_template(payload.get('template'))
     book = Workbook()
@@ -158,14 +166,16 @@ def write(payload):
     sheet.row_dimensions[1].height = old.row_dimensions[1].height
     meta = book.create_sheet(META)
     meta.sheet_state = 'veryHidden'
-    meta['A1'] = json.dumps(
-        {
-            'schemaVersion': file['schemaVersion'],
-            'generatedAt': file['generatedAt'],
-            'moduleUrl': file['moduleUrl'],
-            'coverage': file['coverage'],
-        },
-        ensure_ascii=False,
+    meta['A1'] = clean_text(
+        json.dumps(
+            {
+                'schemaVersion': file['schemaVersion'],
+                'generatedAt': file['generatedAt'],
+                'moduleUrl': file['moduleUrl'],
+                'coverage': file['coverage'],
+            },
+            ensure_ascii=False,
+        )
     )
     meta.append(['id', 'visible_sha256', 'case_json'])
     module = Path(file['moduleUrl'].split('?')[0].rstrip('/')).name or '目标页面'
@@ -302,9 +312,7 @@ def results(payload):
             )
         note = '\n'.join(notes)[:3000]
         # 回放失败原因含 ANSI 转义（\u001b[2m 等），openpyxl 会抛 IllegalCharacterError
-        from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-
-        note = ILLEGAL_CHARACTERS_RE.sub('', note)
+        note = clean_text(note)
         remark = sheet.cell(row, 16)
         remark.value = note
         alignment = copy.copy(remark.alignment)
@@ -329,10 +337,14 @@ def results(payload):
 
 
 if __name__ == '__main__':
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8')
     try:
         data = json.load(sys.stdin)
         result = {'write': write, 'read': read, 'results': results}[sys.argv[1]](data)
-        print(json.dumps(result, ensure_ascii=False))
+        # The Node parent consumes JSON, so ASCII escapes avoid Windows console codepages.
+        print(json.dumps(result, ensure_ascii=True))
     except Exception as exc:
         print(f'{type(exc).__name__}: {exc}', file=sys.stderr)
         sys.exit(1)
