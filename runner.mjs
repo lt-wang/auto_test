@@ -3,7 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 import { Laya } from './lib/model.mjs';
-import { openBrowser } from './lib/browser-provider.mjs';
+import { createGenerationPolicy } from './lib/generation-policy.mjs';
+import { createRoleRegistry } from './lib/role-sessions.mjs';
+import { openBrowserSession } from './lib/browser-provider.mjs';
 import {
     loadLocalEnvironment,
     loadProjectConfig,
@@ -13,7 +15,6 @@ import {
 import { Engine } from './lib/engine.mjs';
 import { describe, expectation, lines } from './lib/language.mjs';
 import { settle } from './lib/dom.mjs';
-import { switchLanguage } from './lib/readiness.mjs';
 const ROOT = path.dirname(fileURLToPath(import.meta.url)),
     args = process.argv.slice(2);
 const arg = (n, d) => {
@@ -37,6 +38,8 @@ const config = {
     apiBase: option('--api-base', 'LAYA_API_BASE', 'apiBase', ''),
     apiModel: option('--api-model', 'LAYA_API_MODEL', 'apiModel', ''),
     apiTimeout: Number(option('--api-timeout', 'LAYA_API_TIMEOUT', 'apiTimeout', 30000)),
+    jevBase: option('--jev-base', 'TYPESAFE_BASE_URL', 'jevBase', 'https://api.typesafe.ai'),
+    jevModel: option('--jev-model', 'TYPESAFE_DEFAULT_MODEL', 'jevModel', 'jev-latest'),
     browserProvider: option(
         '--browser-provider',
         'BROWSER_PROVIDER',
@@ -61,9 +64,17 @@ const config = {
     minMargin: Number(arg('--min-margin', '0.18')),
     cases: arg('--cases', '').split(',').filter(Boolean),
     data: {},
+    bindings: option('--bindings', 'TEST_BINDINGS', 'bindings', ''),
+    output: option('--output', 'TEST_OUTPUT_FILE', 'output', ''),
     runId,
     out: path.resolve(option('--out', 'TEST_OUTPUT', 'out', path.join(ROOT, 'runs', runId))),
 };
+config.generationPolicy = createGenerationPolicy(fileConfig.generation, {
+    allowWrite: config.allowWrite,
+});
+config.roles = fileConfig.roles || {};
+config.caseRoles = fileConfig.caseRoles || {};
+config.role = fileConfig.role || 'default';
 async function secret(label = '登录密码', envName = 'TEST_PASSWORD') {
     if (process.env[envName]) return process.env[envName];
     if (!process.stdin.isTTY) throw Error('需要交互终端输入' + label + '，或设置' + envName);
@@ -113,11 +124,21 @@ async function report(results, laya, source, warnings) {
         import_warnings: warnings,
         mode: config.headless ? 'headless' : 'headed',
         provider: config.provider,
-        model: config.provider === 'api' ? config.apiModel : config.model,
+        model:
+            config.provider === 'api'
+                ? config.apiModel
+                : config.provider === 'jev'
+                  ? config.jevModel
+                  : config.model,
         ...(config.provider === 'api' ? { api_base: config.apiBase } : {}),
+        ...(config.provider === 'jev' ? { jev_base: config.jevBase } : {}),
         engine:
             '通用DOM候选 + ' +
-            (config.provider === 'api' ? 'API Laya' : '本地Laya') +
+            (config.provider === 'api'
+                ? 'API Laya'
+                : config.provider === 'jev'
+                  ? 'TypeSafe Jev'
+                  : '本地Laya') +
             '选择 + 确定性断言',
         counts,
         metrics: {
@@ -132,6 +153,7 @@ async function report(results, laya, source, warnings) {
     const rows = [
         [
             '工作表',
+            '操作者',
             '编号',
             '用例',
             '结果',
@@ -144,6 +166,7 @@ async function report(results, laya, source, warnings) {
         ],
         ...results.map((r) => [
             r.sheet,
+            r.actor || 'default',
             r.id,
             r.title,
             r.status,
@@ -166,9 +189,9 @@ async function report(results, laya, source, warnings) {
         .map(([k, v]) => k + ' ' + v)
         .join(
             '，',
-        )}。通过要求步骤完整执行且全部预期有明确断言；跳过不计通过。\n\n|编号|用例|结果|原因|\n|---|---|---|---|\n`;
+        )}。通过要求步骤完整执行且全部预期有明确断言；跳过不计通过。\n\n|操作者|编号|用例|结果|原因|\n|---|---|---|---|\n`;
     for (const r of results)
-        md += `|${clean(r.id)}|${clean(r.title)}|${r.status}|${clean(r.reason)}|\n`;
+        md += `|${clean(r.actor || 'default')}|${clean(r.id)}|${clean(r.title)}|${r.status}|${clean(r.reason)}|\n`;
     await fs.writeFile(path.join(config.out, '报告.md'), md);
     await fs.writeFile(
         path.join(ROOT, 'latest-run.json'),
@@ -180,17 +203,17 @@ let laya, browser, activePage;
 async function main() {
     if (flag('--help')) {
         console.log(
-            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api；--browser-provider playwright；--browser-channel chrome|chromium；--headless。API地址和模型名称需自行配置，密钥由LAYA_API_KEY或隐藏输入提供。',
+            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n重新绑定：./run.sh --mode rebind --case-file 用例.xlsx --bindings bindings.json [--output 新用例.xlsx]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright|browser-use；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
         );
         return;
     }
     if (!config.excel && !arg('--mode', '')) throw Error('请通过--excel指定用例文件');
-    if (!['local', 'api'].includes(config.provider))
-        throw Error('--provider仅支持local或api，默认local');
+    if (!['local', 'api', 'jev'].includes(config.provider))
+        throw Error('--provider仅支持local、api或jev，默认local');
     if (config.provider === 'api' && (!config.apiBase || !config.apiModel))
         throw Error('API模式需配置 LAYA_API_BASE 和 LAYA_API_MODEL');
-    if (config.browserProvider !== 'playwright')
-        throw Error('当前只实现 playwright 浏览器驱动；browser-use 等适配器尚未实现');
+    if (!['playwright', 'browser-use'].includes(config.browserProvider))
+        throw Error('--browser-provider仅支持playwright或browser-use');
     if (!Number.isFinite(config.apiTimeout) || config.apiTimeout <= 0)
         throw Error('--api-timeout必须大于0');
     for (const key of [
@@ -228,6 +251,13 @@ async function main() {
             'templateExcel',
             config.excel || '',
         );
+        if (workflowMode === 'rebind') {
+            const { runRebind } = await import('./lib/rebind.mjs');
+            await fs.mkdir(config.out, { recursive: true });
+            const result = await runRebind(config);
+            console.log('RESULT ' + JSON.stringify(result));
+            return result;
+        }
         const { runWorkflow } = await import('./lib/workflow.mjs');
         return runWorkflow(config, workflowMode, secret, ROOT);
     }
@@ -235,7 +265,9 @@ async function main() {
     let apiKey =
         config.provider === 'api' && !config.dryRun
             ? await secret('API密钥', 'LAYA_API_KEY')
-            : undefined;
+            : config.provider === 'jev' && !config.dryRun
+              ? await secret('TypeSafe API密钥', 'TYPESAFE_API_KEY')
+              : undefined;
     laya = new Laya(
         config.python,
         path.join(ROOT, 'worker.py'),
@@ -243,8 +275,8 @@ async function main() {
         path.join(config.out, 'decisions.ndjson'),
         {
             provider: config.dryRun ? 'local' : config.provider,
-            base: config.apiBase,
-            model: config.apiModel,
+            base: config.provider === 'jev' ? config.jevBase : config.apiBase,
+            model: config.provider === 'jev' ? config.jevModel : config.apiModel,
             key: apiKey,
             timeout: config.apiTimeout,
         },
@@ -322,43 +354,59 @@ async function main() {
     console.log(
         config.provider === 'api'
             ? '使用API Laya：' + config.apiModel + ' @ ' + config.apiBase + '（不加载本地模型）'
-            : '加载本地Laya...',
+            : config.provider === 'jev'
+              ? '使用TypeSafe Jev：' +
+                config.jevModel +
+                ' @ ' +
+                config.jevBase +
+                '（不加载本地模型）'
+              : '加载本地Laya...',
     );
     const loaded = await laya.request({ action: 'load' });
     console.log(
-        (config.provider === 'api' ? 'API连接验证完成 ' : '本地模型已加载 ') +
+        (config.provider === 'local' ? '本地模型已加载 ' : '模型服务验证完成 ') +
             loaded.load_ms +
             'ms',
     );
-    const { browser: opened, context, page } = await openBrowser(config);
-    browser = opened;
-    activePage = page;
-    const engine = new Engine(page, laya, config);
+    browser = await openBrowserSession(config);
+    activePage = browser;
+    const engine = new Engine(browser, laya, config);
     await engine.navigate(config.url);
+    const passwords = async () =>
+        (await browser.snapshot()).controls.filter(
+            (control) => control.role === 'password' && control.visible,
+        );
     if (config.manualLogin) {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         await rl.question('请在浏览器完成登录，回到终端按回车继续：');
         rl.close();
         await engine.navigate(config.url);
-        config.authenticated = (await page.locator('input[type="password"]:visible').count()) === 0;
+        config.authenticated = (await passwords()).length === 0;
     } else if (password) {
-        await page.locator('input[type="password"]:visible').first().waitFor({ timeout: 30000 });
-        console.log('页面语言：' + (await switchLanguage(page, config.language)));
+        const fields = await passwords();
+        if (fields.length !== 1) throw Error('登录页存在多个密码框，请用--manual-login');
         const account = await engine.chooseTarget('账号 Account Username', 'fill');
         await account.locator.fill(config.user);
-        const passwords = page.locator('input[type="password"]:visible');
-        if ((await passwords.count()) !== 1)
-            throw Error('登录页存在多个密码框，请用--manual-login');
-        await passwords.fill(password);
+        await browser.act({ kind: 'fill', ref: fields[0].ref, value: password });
         password = null;
         const button = await engine.chooseTarget('登录 Login Sign in');
         await button.locator.click();
-        await passwords.waitFor({ state: 'hidden', timeout: 30000 });
+        const started = Date.now();
+        while ((await passwords()).length && Date.now() - started < 30000)
+            await browser.settle(100);
+        if ((await passwords()).length) throw Error('登录后密码框仍然可见');
         await engine.navigate(config.url);
         config.authenticated = true;
     }
+    config.sessionRegistry = createRoleRegistry(config, {
+        base: browser,
+        url: config.url,
+        laya,
+        readSecret: secret,
+        openSession: () => openBrowserSession(config),
+    });
     // Never record login/password entry in Playwright traces.
-    await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+    await browser.startTrace(path.join(config.out, 'trace.zip'));
     const results = [];
     // A login portal is not necessarily the module under test. Use only an
     // explicit, full menu path from the selected Excel, never an invented route.
@@ -371,7 +419,7 @@ async function main() {
     if (entry) {
         console.log('进入Excel指定模块：' + entry);
         await engine.step(entry);
-        config.url = page.url();
+        config.url = await browser.currentUrl();
         console.log('本轮模块地址：' + config.url);
     }
     for (const [index, c] of selected.entries()) {
@@ -404,7 +452,7 @@ async function main() {
             break;
         }
     }
-    await context.tracing.stop({ path: path.join(config.out, 'trace.zip') });
+    await browser.stopTrace();
     const summary = await report(results, laya, input.cases.length, input.warnings);
     console.log(
         'RESULT ' +
@@ -417,8 +465,9 @@ async function main() {
     laya.close();
     if (config.keepOpen) {
         console.log('浏览器保留，关闭窗口后退出。');
-        await new Promise((resolve) => browser.on('disconnected', resolve));
-    } else await browser.close();
+        await new Promise((resolve) => process.once('SIGINT', resolve));
+    } else if (config.sessionRegistry) await config.sessionRegistry.close();
+    else await browser.close();
 }
 main().catch(async (e) => {
     console.error('停止：' + e.message);
@@ -434,9 +483,7 @@ main().catch(async (e) => {
         )
         .catch(() => {});
     if (activePage)
-        await activePage
-            .screenshot({ path: path.join(config.out, '启动失败.png') })
-            .catch(() => {});
+        await activePage?.screenshot?.(path.join(config.out, '启动失败.png')).catch(() => {});
     laya?.close();
     await browser?.close().catch(() => {});
     process.exitCode = 1;

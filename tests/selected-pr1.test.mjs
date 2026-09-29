@@ -78,6 +78,7 @@ test('create retries use fresh refs and reach the second live entry', async () =
                 ],
             };
         },
+        controlLocator: Workflow.prototype.controlLocator,
         safeClick: async (_, name) => clicked.push(name),
         record: () => {},
         waitForModal: async () => {},
@@ -142,7 +143,10 @@ test('save and delete-confirm replay cannot reload until modal and writes finish
         const fake = {
             case: { steps: [{ kind: 'click', purpose }] },
             config: { pageTimeout: 1000 },
-            page,
+            browser: {
+                reload: page.reload,
+                waitForReady: async () => {},
+            },
             pendingWrites: writes,
             waitModalClosed: async () => events.push('modal closed'),
         };

@@ -4,7 +4,7 @@
 
 Generate **replayable Excel test cases from a live browser page**, or execute an existing natural-language Excel workbook. The current implementation uses Playwright for browser control and either local Laya or a compatible decision API to resolve ambiguous controls. Assertions inspect the resulting page; a model choice alone never counts as a passing test.
 
-This public project includes a local demo, without company-specific adapters, internal URLs, accounts, or gateway settings. **Only the Playwright browser driver and the Laya decision protocol are implemented today.** browser-use and Jev API are listed in the [Roadmap](ROADMAP.en.md), not available backends yet.
+This public project includes a local demo, without company-specific adapters, internal URLs, accounts, or gateway settings. **Browser drivers include Playwright and browser-use. Decision providers include local Laya, a compatible HTTP API, and TypeSafe Jev.** Production generation, replay, and generic Excel execution run through BrowserSession.
 
 ![Customer management page in the public demo](docs/demo.png)
 
@@ -74,9 +74,61 @@ export LAYA_API_KEY='your-secret-key'
 ./run.sh --mode generate --provider api --url 'https://your-test-app.example/module' --manual-login
 ```
 
+```bash
+export TYPESAFE_API_KEY='your-typesafe-key'
+# Optional: export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+# Optional: export TYPESAFE_DEFAULT_MODEL='jev-latest'
+./run.sh --mode generate --provider jev --url 'https://your-test-app.example/module' --manual-login
+```
+
+Jev uses TypeSafe's `/v1/systemone` typed-decision API, not Chat Completions. The concrete model ID returned by the service is written to decision logs.
+
 Local mode defaults to `convaiinnovations/laya-multilingual`; set `LAYA_MODEL=/path/to/model` and `LAYA_PYTHON=/path/to/python` to override it. The browser defaults to Playwright's bundled Chromium; `--browser-channel chrome` uses a separately installed Chrome. `--browser-provider` currently accepts only `playwright` and rejects unsupported values. `--template-excel` can supply a matching 17-column workbook; otherwise the tool creates one without relying on a personal file.
 
+Generation scope can be configured in `config.local.json`:
+
+```json
+{
+    "generation": {
+        "allowedOperations": ["create", "search", "view", "edit", "delete"],
+        "cleanup": "delete-case",
+        "recordPrefix": "LayaAuto",
+        "maxRecords": 100,
+        "allowedDataKeys": ["recordName"]
+    }
+}
+```
+
+`allowedOperations` controls generated flows, `cleanup` accepts `delete-case` or `never`, and `allowedDataKeys` limits fixture keys accepted from `--data`. Operations denied by policy fail before browser actions run.
+
 Run artifacts go to ignored `runs/` and generated workbooks to ignored `generated-cases/`. Reports and workbooks may contain test URLs, page text or test data; review them before sharing. Run `./run.sh --help` for CLI options.
+
+## Multiple Roles
+
+`config.local.json` can define independent browser roles and map case IDs to actors:
+
+```json
+{
+    "roles": {
+        "admin": {
+            "userEnv": "TEST_USER_ADMIN",
+            "passwordEnv": "TEST_PASSWORD_ADMIN"
+        },
+        "viewer": {
+            "userEnv": "TEST_USER_VIEWER",
+            "passwordEnv": "TEST_PASSWORD_VIEWER"
+        }
+    },
+    "caseRoles": {
+        "create": "admin",
+        "search": "viewer",
+        "edit": "admin",
+        "delete": "admin"
+    }
+}
+```
+
+Each role uses an independent browser context. Reports include the actor for every case. Approval steps remain skipped unless `--include-approval` is explicitly supplied.
 
 ## Development and limitations
 
@@ -97,6 +149,6 @@ On its first run, `uv tool run` obtains the pinned Ruff version and caches it fo
 npm test
 ```
 
-Control discovery uses DOM, labels, ARIA roles and some common component classes. It re-observes dynamic DOM, but Canvas controls, closed Shadow DOM, unlabeled custom widgets, and cross-account workflows need adapters. See the [architecture guide](docs/architecture.md) for extension points and current boundaries.
+The public `/components` fixture covers native forms, custom selects, virtual lists, and dialogs. Control discovery uses DOM, labels, ARIA roles and some common component classes. It re-observes dynamic DOM, but Canvas controls, closed Shadow DOM, unlabeled custom widgets, and cross-account workflows need adapters. See the [architecture guide](docs/architecture.md) for extension points and current boundaries.
 
 MIT License. Laya, Playwright and model weights have their own licenses.

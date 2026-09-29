@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Engine } from '../lib/engine.mjs';
+import { createGenerationPolicy } from '../lib/generation-policy.mjs';
 const fakePage = { on() {} };
 test('Writes and confirmation cannot be smuggled through a read-only step', () => {
     const read = new Engine(fakePage, null, { allowWrite: false });
@@ -40,4 +41,16 @@ test('Enter is blocked before key dispatch when write operations are disabled', 
     await assert.rejects(engine.step('按下Enter'), /Enter可能提交/);
     assert.equal(pressed, false);
     assert.equal(observed, undefined);
+});
+
+test('GenerationPolicy can deny writes even when allowWrite is true', () => {
+    const policy = createGenerationPolicy(null, { allowWrite: false });
+    const engine = new Engine(fakePage, null, {
+        allowWrite: true,
+        generationPolicy: policy,
+    });
+    assert.throws(
+        () => engine.guard({ name: '保存' }, '点击保存'),
+        (error) => error.category === '写入未启用' && /只读/.test(error.message),
+    );
 });

@@ -4,7 +4,7 @@
 
 从浏览器页面**生成可回放的 Excel 测试用例**，或读取已有 Excel 执行测试。当前版本使用 Playwright 驱动浏览器，使用本地 Laya 或兼容的决策 API 选择有歧义的控件。执行后的断言由页面状态判断，不把模型判断直接当成通过结果。
 
-项目包含一个可独立运行的公开 demo；企业专用类集适配器、内部地址、账号和模型网关配置均未纳入本仓库。**当前只实现 Playwright 浏览器驱动和 Laya 决策协议。** browser-use、Jev API 等列在 [Roadmap](ROADMAP.md)，尚不能通过改一个配置项直接运行。
+项目包含一个可独立运行的公开 demo；企业专用类集适配器、内部地址、账号和模型网关配置均未纳入本仓库。**当前浏览器驱动支持 Playwright 和 browser-use，决策支持本地 Laya、兼容 HTTP API 和 TypeSafe Jev。** 生产生成、回放和通用 Excel 执行均通过 BrowserSession 运行。
 
 ![公开 demo 的客户管理页面](docs/demo.png)
 
@@ -74,9 +74,61 @@ export LAYA_API_KEY='your-secret-key'
 ./run.sh --mode generate --provider api --url 'https://your-test-app.example/module' --manual-login
 ```
 
+```bash
+export TYPESAFE_API_KEY='your-typesafe-key'
+# 可选：export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+# 可选：export TYPESAFE_DEFAULT_MODEL='jev-latest'
+./run.sh --mode generate --provider jev --url 'https://your-test-app.example/module' --manual-login
+```
+
+Jev 使用 TypeSafe `/v1/systemone` typed-decision 接口，不是 Chat Completions。响应中的具体模型 ID 会写入决策日志。
+
 本地模式默认使用 `convaiinnovations/laya-multilingual`；可以设置 `LAYA_MODEL=/path/to/model` 和 `LAYA_PYTHON=/path/to/python`。浏览器默认是 Playwright 自带 Chromium；安装本机 Chrome 后可选 `--browser-channel chrome`。`--browser-provider` 当前仅接受 `playwright`，其它值会明确报错。`--template-excel` 可指定已有的 17 列模板；不指定时生成项目自带的同列结构，不引用任何个人文件。
 
+可以在 `config.local.json` 中配置生成范围：
+
+```json
+{
+    "generation": {
+        "allowedOperations": ["create", "search", "view", "edit", "delete"],
+        "cleanup": "delete-case",
+        "recordPrefix": "LayaAuto",
+        "maxRecords": 100,
+        "allowedDataKeys": ["recordName"]
+    }
+}
+```
+
+`allowedOperations` 控制允许生成的流程；`cleanup` 支持 `delete-case` 或 `never`；`allowedDataKeys` 限制 `--data` 中允许使用的 fixture 字段。政策禁止的写入不会执行。
+
 运行证据默认写入 `runs/`，生成文件默认写入 `generated-cases/`，两者均不纳入 Git。生成的 Excel 和报告可能含目标 URL、页面文本或测试数据，公开前请自行检查。完整 CLI 参数运行 `./run.sh --help`。
+
+## 多角色配置
+
+可以在 `config.local.json` 中配置独立浏览器角色，并按用例编号指定操作者：
+
+```json
+{
+    "roles": {
+        "admin": {
+            "userEnv": "TEST_USER_ADMIN",
+            "passwordEnv": "TEST_PASSWORD_ADMIN"
+        },
+        "viewer": {
+            "userEnv": "TEST_USER_VIEWER",
+            "passwordEnv": "TEST_PASSWORD_VIEWER"
+        }
+    },
+    "caseRoles": {
+        "create": "admin",
+        "search": "viewer",
+        "edit": "admin",
+        "delete": "admin"
+    }
+}
+```
+
+角色使用独立 browser context。报告包含每一步的 actor。审批步骤默认跳过，只有显式使用 `--include-approval` 才允许执行。
 
 ## 开发与限制
 
@@ -97,6 +149,6 @@ Python 格式化首次运行时由 `uv tool run` 获取固定版本的 Ruff，�
 npm test
 ```
 
-当前通过 DOM、标签、ARIA 角色和部分常见组件类名定位控件。页面动态重渲染后会重新观察；Canvas、封闭 Shadow DOM、缺少语义的自定义控件及复杂跨账号流程需要新增适配。架构、驱动扩展点和现有实现边界见[架构文档](docs/architecture.md)。
+公开 `/components` fixture 覆盖原生表单、自定义下拉、虚拟列表和标准弹窗。当前通过 DOM、标签、ARIA 角色和部分常见组件类名定位控件。页面动态重渲染后会重新观察；Canvas、封闭 Shadow DOM、缺少语义的自定义控件及复杂跨账号流程需要新增适配。架构、驱动扩展点和现有实现边界见[架构文档](docs/architecture.md)。
 
 MIT License。Laya、Playwright 及模型权重分别遵循各自许可证。

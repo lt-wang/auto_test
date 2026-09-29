@@ -14,4 +14,18 @@ These items are **planned**, not shipped. No release dates are promised. The REA
 | P1       | Multiple roles and approval flows              | Support explicit test-account configuration and role switching, recording the actor and assertion evidence for each step               |
 | P2       | Case editing and migration                     | Provide a reviewable way to rebind edited Excel steps instead of silently replaying an old hidden plan                                 |
 
-Implementation order depends on real use cases and adapter contract tests. Today `--browser-provider` accepts only `playwright`; decision `--provider` accepts only `local` or `api` using the current Laya decision protocol. Unsupported values fail explicitly.
+## Implementation Status
+
+Status date: 2026-09-29.
+
+| Planned work                                   | Status                                                                                                               |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Browser driver contract                        | Foundation and Playwright adapter implemented; production engine migration incomplete                                |
+| browser-use adapter                            | Not implemented                                                                                                      |
+| Decision provider contract and Jev API adapter | Complete; Jev provider, CLI configuration, and contract tests pass; live credentials remain deployment configuration |
+| More frontend components                       | Partial; public fixture and full regression matrix incomplete                                                        |
+| Configurable generation policy                 | Scattered write guards exist; unified GenerationPolicy not implemented                                               |
+| Multiple roles and approval flows              | Not implemented                                                                                                      |
+| Case editing and migration                     | Not implemented                                                                                                      |
+
+`--browser-provider` accepts `playwright` or `browser-use`; decision `--provider` accepts `local`, `api`, or `jev`.

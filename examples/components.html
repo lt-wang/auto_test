@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <title>LayaPilot Components Fixture</title>
+    </head>
+    <body>
+        <main>
+            <h1>组件适配公开 Fixture</h1>
+            <section aria-label="原生表单">
+                <label for="native-name">客户名称</label>
+                <input id="native-name" required placeholder="请输入客户名称" />
+                <label><input id="native-enabled" type="checkbox" aria-label="启用" /> 启用</label>
+                <button id="native-save" disabled>保存</button>
+            </section>
+
+            <section aria-label="自定义下拉">
+                <div id="custom-status" role="combobox" aria-label="状态" aria-expanded="false">
+                    未选择
+                </div>
+                <div id="custom-options" role="listbox" hidden>
+                    <div role="option">待处理</div>
+                    <div role="option">已完成</div>
+                </div>
+            </section>
+
+            <section aria-label="虚拟列表">
+                <div role="listbox" aria-label="虚拟选项" id="virtual-list"></div>
+            </section>
+
+            <section aria-label="弹窗">
+                <button id="open-dialog">打开标准弹窗</button>
+                <dialog id="standard-dialog">
+                    <h2>标准弹窗标题</h2>
+                    <p>弹窗正文</p>
+                    <button id="close-dialog">关闭</button>
+                </dialog>
+            </section>
+        </main>
+        <script>
+            const input = document.getElementById('native-name');
+            const save = document.getElementById('native-save');
+            input.addEventListener('input', () => {
+                save.disabled = !input.value;
+            });
+            document.getElementById('native-enabled').addEventListener('change', () => {
+                document.body.dataset.enabled = 'true';
+            });
+
+            const status = document.getElementById('custom-status');
+            const options = document.getElementById('custom-options');
+            status.addEventListener('click', () => {
+                options.hidden = false;
+                status.setAttribute('aria-expanded', 'true');
+            });
+            for (const option of options.querySelectorAll('[role="option"]')) {
+                option.addEventListener('click', () => {
+                    status.textContent = option.textContent;
+                    options.hidden = true;
+                    status.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            const virtual = document.getElementById('virtual-list');
+            for (let index = 0; index < 80; index++) {
+                const option = document.createElement('div');
+                option.setAttribute('role', 'option');
+                option.textContent = '虚拟选项 ' + (index + 1);
+                option.style.cssText = 'height:24px;line-height:24px';
+                virtual.append(option);
+            }
+
+            const dialog = document.getElementById('standard-dialog');
+            document
+                .getElementById('open-dialog')
+                .addEventListener('click', () => dialog.showModal());
+            document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
+        </script>
+    </body>
+</html>
