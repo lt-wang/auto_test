@@ -103,6 +103,33 @@ Jev 使用 TypeSafe `/v1/systemone` typed-decision 接口，不是 Chat Completi
 
 运行证据默认写入 `runs/`，生成文件默认写入 `generated-cases/`，两者均不纳入 Git。生成的 Excel 和报告可能含目标 URL、页面文本或测试数据，公开前请自行检查。完整 CLI 参数运行 `./run.sh --help`。
 
+## 多角色配置
+
+可以在 `config.local.json` 中配置独立浏览器角色，并按用例编号指定操作者：
+
+```json
+{
+    "roles": {
+        "admin": {
+            "userEnv": "TEST_USER_ADMIN",
+            "passwordEnv": "TEST_PASSWORD_ADMIN"
+        },
+        "viewer": {
+            "userEnv": "TEST_USER_VIEWER",
+            "passwordEnv": "TEST_PASSWORD_VIEWER"
+        }
+    },
+    "caseRoles": {
+        "create": "admin",
+        "search": "viewer",
+        "edit": "admin",
+        "delete": "admin"
+    }
+}
+```
+
+角色使用独立 browser context。报告包含每一步的 actor。审批步骤默认跳过，只有显式使用 `--include-approval` 才允许执行。
+
 ## 开发与限制
 
 代码统一使用 4 空格缩进、UTF-8、LF 换行，以 100 列作为自动换行参考。Prettier 负责 JS、JSON、HTML 和 Markdown，Ruff 负责 Python；工具版本固定，格式化不执行 lint 自动修复。

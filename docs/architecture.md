@@ -17,3 +17,5 @@ Jev decisions use `lib/decision/jev-provider.mjs` and the official `@typesafe-ai
 browser-use is integrated through `browser_use_worker.py` and `lib/browser/browser-use-driver.mjs`. browser-use owns the BrowserSession and exposes CDP; the Node adapter connects that browser to the shared BrowserSession contract. The browser-use Agent is not used for planning or assertions.
 
 The public `/components` fixture provides regression coverage for native form controls, custom selects, virtual lists, and standard dialog structures.
+
+Role sessions are managed by `lib/session-registry.mjs` and `lib/role-sessions.mjs`. Each role uses an independent BrowserSession/context, and workflow/engine results record the actor. Approval operations still require explicit policy enablement.

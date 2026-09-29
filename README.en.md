@@ -103,6 +103,33 @@ Generation scope can be configured in `config.local.json`:
 
 Run artifacts go to ignored `runs/` and generated workbooks to ignored `generated-cases/`. Reports and workbooks may contain test URLs, page text or test data; review them before sharing. Run `./run.sh --help` for CLI options.
 
+## Multiple Roles
+
+`config.local.json` can define independent browser roles and map case IDs to actors:
+
+```json
+{
+    "roles": {
+        "admin": {
+            "userEnv": "TEST_USER_ADMIN",
+            "passwordEnv": "TEST_PASSWORD_ADMIN"
+        },
+        "viewer": {
+            "userEnv": "TEST_USER_VIEWER",
+            "passwordEnv": "TEST_PASSWORD_VIEWER"
+        }
+    },
+    "caseRoles": {
+        "create": "admin",
+        "search": "viewer",
+        "edit": "admin",
+        "delete": "admin"
+    }
+}
+```
+
+Each role uses an independent browser context. Reports include the actor for every case. Approval steps remain skipped unless `--include-approval` is explicitly supplied.
+
 ## Development and limitations
 
 Code uses four-space indentation, UTF-8, LF line endings, and a 100-column wrapping target. Prettier formats JS, JSON, HTML, and Markdown; Ruff formats Python. Formatter versions are pinned, and formatting does not apply lint fixes.

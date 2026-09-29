@@ -7,6 +7,9 @@
     "browserChannel": "",
     "headless": false,
     "language": "auto",
+    "roles": {},
+    "caseRoles": {},
+    "role": "default",
     "generation": {
         "allowedOperations": [
             "tabs",

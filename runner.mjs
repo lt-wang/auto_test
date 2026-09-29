@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 import { Laya } from './lib/model.mjs';
 import { createGenerationPolicy } from './lib/generation-policy.mjs';
+import { createRoleRegistry } from './lib/role-sessions.mjs';
 import { openBrowserSession } from './lib/browser-provider.mjs';
 import {
     loadLocalEnvironment,
@@ -71,6 +72,9 @@ const config = {
 config.generationPolicy = createGenerationPolicy(fileConfig.generation, {
     allowWrite: config.allowWrite,
 });
+config.roles = fileConfig.roles || {};
+config.caseRoles = fileConfig.caseRoles || {};
+config.role = fileConfig.role || 'default';
 async function secret(label = '登录密码', envName = 'TEST_PASSWORD') {
     if (process.env[envName]) return process.env[envName];
     if (!process.stdin.isTTY) throw Error('需要交互终端输入' + label + '，或设置' + envName);
@@ -149,6 +153,7 @@ async function report(results, laya, source, warnings) {
     const rows = [
         [
             '工作表',
+            '操作者',
             '编号',
             '用例',
             '结果',
@@ -161,6 +166,7 @@ async function report(results, laya, source, warnings) {
         ],
         ...results.map((r) => [
             r.sheet,
+            r.actor || 'default',
             r.id,
             r.title,
             r.status,
@@ -183,9 +189,9 @@ async function report(results, laya, source, warnings) {
         .map(([k, v]) => k + ' ' + v)
         .join(
             '，',
-        )}。通过要求步骤完整执行且全部预期有明确断言；跳过不计通过。\n\n|编号|用例|结果|原因|\n|---|---|---|---|\n`;
+        )}。通过要求步骤完整执行且全部预期有明确断言；跳过不计通过。\n\n|操作者|编号|用例|结果|原因|\n|---|---|---|---|\n`;
     for (const r of results)
-        md += `|${clean(r.id)}|${clean(r.title)}|${r.status}|${clean(r.reason)}|\n`;
+        md += `|${clean(r.actor || 'default')}|${clean(r.id)}|${clean(r.title)}|${r.status}|${clean(r.reason)}|\n`;
     await fs.writeFile(path.join(config.out, '报告.md'), md);
     await fs.writeFile(
         path.join(ROOT, 'latest-run.json'),
@@ -392,6 +398,13 @@ async function main() {
         await engine.navigate(config.url);
         config.authenticated = true;
     }
+    config.sessionRegistry = createRoleRegistry(config, {
+        base: browser,
+        url: config.url,
+        laya,
+        readSecret: secret,
+        openSession: () => openBrowserSession(config),
+    });
     // Never record login/password entry in Playwright traces.
     await browser.startTrace(path.join(config.out, 'trace.zip'));
     const results = [];
@@ -453,7 +466,8 @@ async function main() {
     if (config.keepOpen) {
         console.log('浏览器保留，关闭窗口后退出。');
         await new Promise((resolve) => process.once('SIGINT', resolve));
-    } else await browser.close();
+    } else if (config.sessionRegistry) await config.sessionRegistry.close();
+    else await browser.close();
 }
 main().catch(async (e) => {
     console.error('停止：' + e.message);
