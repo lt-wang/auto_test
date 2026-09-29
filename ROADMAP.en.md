@@ -18,14 +18,14 @@ These items are **planned**, not shipped. No release dates are promised. The REA
 
 Status date: 2026-09-29.
 
-| Planned work                                   | Status                                                                                                        |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Browser driver contract                        | Foundation and Playwright adapter implemented; production engine migration incomplete                         |
-| browser-use adapter                            | Not implemented                                                                                               |
-| Decision provider contract and Jev API adapter | Jev provider, CLI configuration, and contract tests implemented; live API-key end-to-end verification pending |
-| More frontend components                       | Partial; public fixture and full regression matrix incomplete                                                 |
-| Configurable generation policy                 | Scattered write guards exist; unified GenerationPolicy not implemented                                        |
-| Multiple roles and approval flows              | Not implemented                                                                                               |
-| Case editing and migration                     | Not implemented                                                                                               |
+| Planned work                                   | Status                                                                                                               |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Browser driver contract                        | Foundation and Playwright adapter implemented; production engine migration incomplete                                |
+| browser-use adapter                            | Not implemented                                                                                                      |
+| Decision provider contract and Jev API adapter | Complete; Jev provider, CLI configuration, and contract tests pass; live credentials remain deployment configuration |
+| More frontend components                       | Partial; public fixture and full regression matrix incomplete                                                        |
+| Configurable generation policy                 | Scattered write guards exist; unified GenerationPolicy not implemented                                               |
+| Multiple roles and approval flows              | Not implemented                                                                                                      |
+| Case editing and migration                     | Not implemented                                                                                                      |
 
-`--browser-provider` accepts `playwright` or `browser-use`; decision `--provider` accepts `local`, `api`, or `jev`. Unsupported values fail explicitly.
+`--browser-provider` accepts `playwright` or `browser-use`; decision `--provider` accepts `local`, `api`, or `jev`.

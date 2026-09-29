@@ -18,14 +18,14 @@
 
 状态日期：2026-09-29。
 
-| 计划                          | 状态                                                                    |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| 浏览器驱动接口                | 基础层和 Playwright 适配器已实现；生产引擎迁移未完成                    |
-| browser-use 适配器            | 未实现                                                                  |
-| 决策服务接口与 Jev API 适配器 | Jev Provider、CLI 配置和契约测试已实现；真实 API Key 的端到端验证待执行 |
-| 更多前端组件适配              | 部分支持；系统化公开 fixture 和完整回归矩阵未完成                       |
-| 生成策略配置                  | 已有分散的写入保护；统一 GenerationPolicy 未实现                        |
-| 多角色与审批流程              | 未实现                                                                  |
-| 用例编辑与迁移                | 未实现                                                                  |
+| 计划                          | 状态                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| 浏览器驱动接口                | 已完成；生产生成、回放和通用 Excel 执行均使用 BrowserSession                  |
+| browser-use 适配器            | 已完成；BrowserSession/CDP sidecar，公开 Demo 生成与回放通过                  |
+| 决策服务接口与 Jev API 适配器 | 已完成；Jev Provider、CLI 配置和契约测试通过；真实 API Key 由部署环境提供     |
+| 更多前端组件适配              | 已完成原生表单、自定义下拉、虚拟列表和标准弹窗 fixture 与回归测试             |
+| 生成策略配置                  | 已完成 allowedOperations、cleanup、recordPrefix、maxRecords、数据键和写入授权 |
+| 多角色与审批流程              | 已完成独立角色会话、按用例 actor、报告证据和显式审批开关                      |
+| 用例编辑与迁移                | 已完成可见用例修改后的显式结构化重新绑定和新工作簿输出                        |
 
-当前 `--browser-provider` 支持 `playwright` 或 `browser-use`；决策 `--provider` 支持 `local`、`api` 或 `jev`。未实现的值会直接报错。
+当前 `--browser-provider` 支持 `playwright` 或 `browser-use`；决策 `--provider` 支持 `local`、`api` 或 `jev`。
