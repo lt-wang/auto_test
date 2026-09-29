@@ -195,7 +195,7 @@ let laya, browser, activePage;
 async function main() {
     if (flag('--help')) {
         console.log(
-            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
+            'LayaPilot\n生成：./run.sh --mode generate --url 页面地址 [--template-excel 模板.xlsx] [--case-file 用例.xlsx]\n回放：./run.sh --mode execute --case-file 用例.xlsx [--url 页面地址]\n原有Excel：./run.sh --excel 用例.xlsx --url 页面地址 [--cases 001,002]\n--config 配置.json；--provider local|api|jev；--browser-provider playwright|browser-use；--browser-channel chrome|chromium；--headless。Jev 使用 TYPESAFE_BASE_URL、TYPESAFE_DEFAULT_MODEL 和 TYPESAFE_API_KEY。',
         );
         return;
     }
@@ -204,8 +204,8 @@ async function main() {
         throw Error('--provider仅支持local、api或jev，默认local');
     if (config.provider === 'api' && (!config.apiBase || !config.apiModel))
         throw Error('API模式需配置 LAYA_API_BASE 和 LAYA_API_MODEL');
-    if (config.browserProvider !== 'playwright')
-        throw Error('当前只实现 playwright 浏览器驱动；browser-use 等适配器尚未实现');
+    if (!['playwright', 'browser-use'].includes(config.browserProvider))
+        throw Error('--browser-provider仅支持playwright或browser-use');
     if (!Number.isFinite(config.apiTimeout) || config.apiTimeout <= 0)
         throw Error('--api-timeout必须大于0');
     for (const key of [

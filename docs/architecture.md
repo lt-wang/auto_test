@@ -13,3 +13,5 @@ Current UI coverage is strongest for semantic HTML plus Ant Design, Element and 
 The browser contract foundation lives in `lib/browser/`. It provides normalized snapshots, opaque refs, semantic commands and conditions, capability reporting, and normalized events. `openBrowserSession()` is the production browser entry point. The public demo has passed generation and replay through the contract.
 
 Jev decisions use `lib/decision/jev-provider.mjs` and the official `@typesafe-ai/sdk`. The provider boundary validates choice/probability responses before the engine sees them.
+
+browser-use is integrated through `browser_use_worker.py` and `lib/browser/browser-use-driver.mjs`. browser-use owns the BrowserSession and exposes CDP; the Node adapter connects that browser to the shared BrowserSession contract. The browser-use Agent is not used for planning or assertions.

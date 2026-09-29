@@ -28,4 +28,4 @@
 | 多角色与审批流程              | 未实现                                                                  |
 | 用例编辑与迁移                | 未实现                                                                  |
 
-当前 `--browser-provider` 仍只接受 `playwright`；决策 `--provider` 支持 `local`、`api` 或 `jev`。未实现的值会直接报错。
+当前 `--browser-provider` 支持 `playwright` 或 `browser-use`；决策 `--provider` 支持 `local`、`api` 或 `jev`。未实现的值会直接报错。

@@ -1,0 +1,2 @@
+-r requirements-local.txt
+browser-use==0.13.10

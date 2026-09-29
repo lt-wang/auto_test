@@ -28,4 +28,4 @@ Status date: 2026-09-29.
 | Multiple roles and approval flows              | Not implemented                                                                                               |
 | Case editing and migration                     | Not implemented                                                                                               |
 
-`--browser-provider` still accepts only `playwright`; decision `--provider` accepts `local`, `api`, or `jev`. Unsupported values fail explicitly.
+`--browser-provider` accepts `playwright` or `browser-use`; decision `--provider` accepts `local`, `api`, or `jev`. Unsupported values fail explicitly.

@@ -321,3 +321,7 @@ The Roadmap is complete only when:
 As of 2026-09-29, the Jev decision provider is implemented with `@typesafe-ai/sdk@0.6.0` and the `/v1/systemone` endpoint. The provider validates choice/probability responses, records the concrete response model ID, and fails closed on SDK or HTTP errors. Mocked contract tests cover success, malformed probabilities, and authentication failure. A live API-key integration run remains required before production use.
 
 The browser driver foundation is implemented, but production engines still use the legacy Playwright path. browser-use and the remaining P1/P2 Roadmap items remain pending.
+
+## 19. browser-use Status
+
+As of 2026-09-29, browser-use 0.13.10 is integrated through a Python sidecar that owns a BrowserSession and exposes CDP. The Node driver connects that browser to the shared contract. Public demo generation produced 8 verified cases and replay passed 8/8. The browser-use Agent is not used for planning or assertions.

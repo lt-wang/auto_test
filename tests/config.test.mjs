@@ -112,9 +112,9 @@ test('local environment is parsed without evaluating shell code, and shell value
     }
 });
 
-test('unimplemented browser backends fail before opening a browser', async () => {
+test('unsupported browser backends fail before opening a browser', async () => {
     await assert.rejects(
-        openBrowserSession({ browserProvider: 'browser-use' }),
+        openBrowserSession({ browserProvider: 'unsupported' }),
         /Unsupported browser provider/,
     );
 });
