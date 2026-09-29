@@ -122,6 +122,6 @@ Python 格式化首次运行时由 `uv tool run` 获取固定版本的 Ruff，�
 npm test
 ```
 
-当前通过 DOM、标签、ARIA 角色和部分常见组件类名定位控件。页面动态重渲染后会重新观察；Canvas、封闭 Shadow DOM、缺少语义的自定义控件及复杂跨账号流程需要新增适配。架构、驱动扩展点和现有实现边界见[架构文档](docs/architecture.md)。
+公开 `/components` fixture 覆盖原生表单、自定义下拉、虚拟列表和标准弹窗。当前通过 DOM、标签、ARIA 角色和部分常见组件类名定位控件。页面动态重渲染后会重新观察；Canvas、封闭 Shadow DOM、缺少语义的自定义控件及复杂跨账号流程需要新增适配。架构、驱动扩展点和现有实现边界见[架构文档](docs/architecture.md)。
 
 MIT License。Laya、Playwright 及模型权重分别遵循各自许可证。

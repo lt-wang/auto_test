@@ -15,3 +15,5 @@ The browser contract foundation lives in `lib/browser/`. It provides normalized 
 Jev decisions use `lib/decision/jev-provider.mjs` and the official `@typesafe-ai/sdk`. The provider boundary validates choice/probability responses before the engine sees them.
 
 browser-use is integrated through `browser_use_worker.py` and `lib/browser/browser-use-driver.mjs`. browser-use owns the BrowserSession and exposes CDP; the Node adapter connects that browser to the shared BrowserSession contract. The browser-use Agent is not used for planning or assertions.
+
+The public `/components` fixture provides regression coverage for native form controls, custom selects, virtual lists, and standard dialog structures.

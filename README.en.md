@@ -122,6 +122,6 @@ On its first run, `uv tool run` obtains the pinned Ruff version and caches it fo
 npm test
 ```
 
-Control discovery uses DOM, labels, ARIA roles and some common component classes. It re-observes dynamic DOM, but Canvas controls, closed Shadow DOM, unlabeled custom widgets, and cross-account workflows need adapters. See the [architecture guide](docs/architecture.md) for extension points and current boundaries.
+The public `/components` fixture covers native forms, custom selects, virtual lists, and dialogs. Control discovery uses DOM, labels, ARIA roles and some common component classes. It re-observes dynamic DOM, but Canvas controls, closed Shadow DOM, unlabeled custom widgets, and cross-account workflows need adapters. See the [architecture guide](docs/architecture.md) for extension points and current boundaries.
 
 MIT License. Laya, Playwright and model weights have their own licenses.
