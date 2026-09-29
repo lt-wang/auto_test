@@ -4,7 +4,7 @@
 
 Generate **replayable Excel test cases from a live browser page**, or execute an existing natural-language Excel workbook. The current implementation uses Playwright for browser control and either local Laya or a compatible decision API to resolve ambiguous controls. Assertions inspect the resulting page; a model choice alone never counts as a passing test.
 
-This public project includes a local demo, without company-specific adapters, internal URLs, accounts, or gateway settings. **Only the Playwright browser driver and the Laya decision protocol are implemented today.** browser-use and Jev API are listed in the [Roadmap](ROADMAP.en.md), not available backends yet.
+This public project includes a local demo, without company-specific adapters, internal URLs, accounts, or gateway settings. **Playwright is the only implemented browser driver. Decision providers include local Laya, a compatible HTTP API, and TypeSafe Jev.** browser-use remains in the [Roadmap](ROADMAP.en.md); the browser contract foundation exists, but production engine migration is not complete.
 
 ![Customer management page in the public demo](docs/demo.png)
 

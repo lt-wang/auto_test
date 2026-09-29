@@ -4,7 +4,7 @@
 
 从浏览器页面**生成可回放的 Excel 测试用例**，或读取已有 Excel 执行测试。当前版本使用 Playwright 驱动浏览器，使用本地 Laya 或兼容的决策 API 选择有歧义的控件。执行后的断言由页面状态判断，不把模型判断直接当成通过结果。
 
-项目包含一个可独立运行的公开 demo；企业专用类集适配器、内部地址、账号和模型网关配置均未纳入本仓库。**当前只实现 Playwright 浏览器驱动和 Laya 决策协议。** browser-use、Jev API 等列在 [Roadmap](ROADMAP.md)，尚不能通过改一个配置项直接运行。
+项目包含一个可独立运行的公开 demo；企业专用类集适配器、内部地址、账号和模型网关配置均未纳入本仓库。**当前浏览器驱动只实现 Playwright，决策支持本地 Laya、兼容 HTTP API 和 TypeSafe Jev。** browser-use 仍列在 [Roadmap](ROADMAP.md)；浏览器驱动契约基础层已实现，但生产引擎迁移尚未完成。
 
 ![公开 demo 的客户管理页面](docs/demo.png)
 

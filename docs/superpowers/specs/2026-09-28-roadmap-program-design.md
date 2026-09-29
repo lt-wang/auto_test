@@ -315,3 +315,9 @@ The Roadmap is complete only when:
 - Write scope, data, cleanup, roles, and approvals are explicit.
 - Workbook edits can be reviewed and rebound without silent execution of stale hidden steps.
 - The current Playwright-only path remains compatible or has an approved migration.
+
+## 18. Decision Provider Status
+
+As of 2026-09-29, the Jev decision provider is implemented with `@typesafe-ai/sdk@0.6.0` and the `/v1/systemone` endpoint. The provider validates choice/probability responses, records the concrete response model ID, and fails closed on SDK or HTTP errors. Mocked contract tests cover success, malformed probabilities, and authentication failure. A live API-key integration run remains required before production use.
+
+The browser driver foundation is implemented, but production engines still use the legacy Playwright path. browser-use and the remaining P1/P2 Roadmap items remain pending.

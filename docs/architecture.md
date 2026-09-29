@@ -4,7 +4,7 @@ The public runner has three paths: `generate` and `execute` in `lib/workflow.mjs
 
 The browser session currently exposes a Playwright `browser`, `context`, and `page`. A new browser backend must implement the page operations used by `lib/dom.mjs`, `lib/form.mjs`, `lib/readiness.mjs`, `lib/workflow.mjs`, and `lib/engine.mjs`, plus context tracing and diagnostic events. Merely accepting `--browser-provider browser-use` would be misleading; the runner rejects it until an adapter and integration tests exist.
 
-The decision boundary is `choose(state, criteria, meta)`, returning a choice among the supplied candidates and calibrated probabilities or an explicit failure. Local Laya and the currently compatible HTTP API implement this behavior. A future Jev API adapter needs an explicit request/response mapping, probability validation, credential handling and contract tests before it can be selected.
+The decision boundary is `choose(state, criteria, meta)`, returning a choice among the supplied candidates and calibrated probabilities or an explicit failure. Local Laya, the compatible HTTP API, and TypeSafe Jev implement this behavior. Jev uses the official SDK and `/v1/systemone`; malformed probabilities and provider errors fail closed.
 
 The workbook contract is in `lib/workflow_excel.py`. The visible 17 columns are human readable; `__laya_steps__` contains a structured, validated replay plan. The digest binds the visible case ID, title, preconditions, steps and expected result to the plan. The generated Excel is a test artifact, not arbitrary executable code.
 

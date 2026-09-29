@@ -26,11 +26,11 @@
 - Create: `lib/decision/contract.mjs`
 - Create: `tests/decision-contract.test.mjs`
 
-- [ ] Write tests for `DecisionProvider` validation helpers and normalized decision records.
-- [ ] Run `node --test tests/decision-contract.test.mjs` and confirm the module is missing.
-- [ ] Implement `validateDecision`, `assertProvider`, and provider capability helpers.
-- [ ] Run the focused test and full suite.
-- [ ] Commit `feat: add decision provider contract`.
+- [x] Write tests for `DecisionProvider` validation helpers and normalized decision records.
+- [x] Run `node --test tests/decision-contract.test.mjs` and confirm the module is missing.
+- [x] Implement `validateDecision`, `assertProvider`, and provider capability helpers.
+- [x] Run the focused test and full suite.
+- [x] Commit `feat: add decision provider contract`.
 
 ## Task 2: Jev provider
 
@@ -41,12 +41,12 @@
 - Modify: `package.json`
 - Modify: `package-lock.json`
 
-- [ ] Add failing tests using a mocked SDK fetch for valid choice, malformed probabilities, and typed model metadata.
-- [ ] Install `@typesafe-ai/sdk@0.6.0`.
-- [ ] Implement `JevDecisionProvider` with `warmup`, `choose`, and `close`.
-- [ ] Verify no fallback occurs on HTTP or SDK errors.
-- [ ] Run focused and full tests.
-- [ ] Commit `feat: add jev decision provider`.
+- [x] Add failing tests using a mocked SDK fetch for valid choice, malformed probabilities, and typed model metadata.
+- [x] Install `@typesafe-ai/sdk@0.6.0`.
+- [x] Implement `JevDecisionProvider` with `warmup`, `choose`, and `close`.
+- [x] Verify no fallback occurs on HTTP or SDK errors.
+- [x] Run focused and full tests.
+- [x] Commit `feat: add jev decision provider`.
 
 ## Task 3: Integrate Jev into the Laya facade
 
@@ -56,11 +56,11 @@
 - Modify: `tests/api.test.mjs`
 - Create: `tests/model-jev.test.mjs`
 
-- [ ] Add failing tests that `provider=jev` routes `choose` and `load` to Jev without loading Python Laya.
-- [ ] Add Jev options to `Laya` and keep Python worker for `read_excel`.
-- [ ] Validate provider values `local|api|jev`.
-- [ ] Run focused and full tests.
-- [ ] Commit `feat: route decision facade to jev`.
+- [x] Add failing tests that `provider=jev` routes `choose` and `load` to Jev without loading Python Laya.
+- [x] Add Jev options to `Laya` and keep Python worker for `read_excel`.
+- [x] Validate provider values `local|api|jev`.
+- [x] Run focused and full tests.
+- [x] Commit `feat: route decision facade to jev`.
 
 ## Task 4: CLI and environment configuration
 
@@ -74,12 +74,12 @@
 - Modify: `README.md`
 - Modify: `README.en.md`
 
-- [ ] Add failing configuration tests for Jev provider selection and secret handling.
-- [ ] Allow `--provider jev` and validate required Jev settings.
-- [ ] Read `TYPESAFE_API_KEY` through hidden input or environment only.
-- [ ] Document Jev setup and make clear it is not Chat Completions.
-- [ ] Run focused and full tests.
-- [ ] Commit `feat: configure jev decision provider`.
+- [x] Add failing configuration tests for Jev provider selection and secret handling.
+- [x] Allow `--provider jev` and validate required Jev settings.
+- [x] Read `TYPESAFE_API_KEY` through hidden input or environment only.
+- [x] Document Jev setup and make clear it is not Chat Completions.
+- [x] Run focused and full tests.
+- [x] Commit `feat: configure jev decision provider`.
 
 ## Task 5: End-to-end contract verification and roadmap update
 
@@ -90,10 +90,10 @@
 - Modify: `ROADMAP.en.md`
 - Modify: `docs/superpowers/specs/2026-09-28-roadmap-program-design.md`
 
-- [ ] Add a mocked end-to-end decision test proving candidate mapping and model logging.
-- [ ] Run Node and Python suites plus formatting checks.
-- [ ] Mark only the Jev portion complete in documentation; keep browser-use and engine migration pending.
-- [ ] Commit `docs: record jev provider completion`.
+- [x] Add a mocked end-to-end decision test proving candidate mapping and model logging.
+- [x] Run Node and Python suites plus formatting checks.
+- [x] Mark only the Jev portion complete in documentation; keep browser-use and engine migration pending.
+- [x] Commit `docs: record jev provider completion`.
 
 ## Follow-Up Boundary
 
