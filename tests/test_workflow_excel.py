@@ -191,7 +191,6 @@ class WorkbookTests(unittest.TestCase):
                 '\u4fdd\u5b58\u6309\u94ae',
             )
 
-
     def test_read_editable_reports_visible_changes_without_losing_hidden_case(self):
         with tempfile.TemporaryDirectory(prefix='laya-excel-') as directory:
             source = str(Path(directory) / 'editable.xlsx')

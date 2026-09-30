@@ -141,6 +141,7 @@ def load_template(path):
 
 def write(payload):
     file = payload['file']
+
     # 失败原因常含 ANSI 转义序列（\u001b[2m 等）与其它控制字符，openpyxl 会抛
     # IllegalCharacterError 并把整个用例文件写出炸掉。统一在入口清洗。
     def clean(v):

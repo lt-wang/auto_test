@@ -50,7 +50,6 @@ test('Jev mode rejects unsupported provider values', () => {
     );
 });
 
-
 test('Jev choose records the concrete response model', async () => {
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'laya-pilot-jev-'));
     try {
