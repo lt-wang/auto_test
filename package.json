@@ -24,6 +24,8 @@
         "playwright": "1.62.1"
     },
     "devDependencies": {
+        "pixelmatch": "7.1.0",
+        "pngjs": "7.0.0",
         "prettier": "3.9.9"
     }
 }
