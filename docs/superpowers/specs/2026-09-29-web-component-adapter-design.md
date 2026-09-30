@@ -1,8 +1,8 @@
 # Web Component Adapter Design
 
-**Status:** Approved direction for implementation planning  
-**Date:** 2026-09-29  
-**Target application:** `E:\szxa-next-harness\szxa-next-desktop`  
+**Status:** Approved direction for implementation planning
+**Date:** 2026-09-29
+**Target application:** `E:\szxa-next-harness\szxa-next-desktop`
 **Target mode:** Browser/Web only; the frontend repository will not be modified.
 
 ## Goal
@@ -35,19 +35,19 @@ The target application may be a Tauri hybrid desktop application, but this desig
 
 The implementation adds five layers beneath `BrowserSession`:
 
-1. **Component Adapter Registry**  
+1. **Direct Component Detection**
    Enriches normalized controls with component-specific metadata such as `component`, `adapter`, `testId`, `expanded`, or `layer`.
 
-2. **Identity Resolver**  
+2. **Identity Resolver**
    Produces stable row and control identities from existing DOM attributes, row text, table position, and normalized structural fingerprints.
 
-3. **Label Resolver**  
+3. **Label Resolver**
    Retains unnamed interactive elements in snapshots, discovers Tooltip text by safe hover, and caches discovered labels in `data-laya-tooltip-label` during the browser session.
 
-4. **Overlay and Runtime Instrumentation**  
+4. **Overlay and Runtime Instrumentation**
    Distinguishes real modals from Mantine popovers, tracks the active overlay stack, and exposes Canvas/ECharts/Mapbox state through an injected browser bridge.
 
-5. **Interaction Driver**  
+5. **Interaction Driver**
    Maps normalized actions to DOM actions, Playwright file inputs, pointer drags, library-specific actions, and visual assertions.
 
 The generator and workflow continue to consume normalized snapshots. They do not learn Mantine selectors or application-specific page structure.
@@ -65,8 +65,9 @@ The generator and workflow continue to consume normalized snapshots. They do not
 | Custom selectors                                        | Structural dialog + table/tree + confirm pattern               | open, search, select, confirm                |
 | FileUpload                                              | Hidden `input[type=file]` or file chooser                      | `upload`                                     |
 | Dnd list                                                | Draggable handles, row order, pointer events                   | `drag`                                       |
-| Mapbox, ECharts, QR canvas                              | Runtime bridge and screenshots                                 | pointer actions and visual assertions        |
-| Video/HLS/MPEGTS                                        | DOM media attributes/events and screenshots                    | media events and visual assertions           |
+| Canvas, ECharts, Mapbox                                 | Runtime bridge and screenshots                                 | pointer actions and visual assertions        |
+| QR rendered to canvas                                   | Generic screenshot only; no QR decoding                        | visual assertion                             |
+| Video/HLS/MPEGTS                                        | Generic visible screenshot only                                | no dedicated media controls or events        |
 
 ## Failure Policy
 

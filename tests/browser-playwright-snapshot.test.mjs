@@ -319,3 +319,31 @@ test('snapshot preserves explicit row keys on non-tbody rows', async () => {
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('snapshot preserves tri-state aria-expanded metadata', async () => {
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(`
+            <button>普通按钮</button>
+            <button aria-expanded="false">收起</button>
+            <button aria-expanded="true">展开</button>
+        `);
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+        const { port } = server.address();
+        await page.goto(`http://127.0.0.1:${port}/`);
+        const snapshot = await snapshotPlaywrightPage(page);
+        const byName = Object.fromEntries(
+            snapshot.controls.map((control) => [control.name, control.expanded]),
+        );
+        assert.equal(byName['普通按钮'], null);
+        assert.equal(byName['收起'], false);
+        assert.equal(byName['展开'], true);
+    } finally {
+        await browser.close();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});

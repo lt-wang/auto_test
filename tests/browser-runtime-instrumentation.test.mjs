@@ -65,3 +65,21 @@ test('runtime instrumentation wraps a lazily-populated echarts init', async (t) 
     assert.equal(result.snapshot.echarts.length, 1);
     assert.equal(result.snapshot.echarts[0].series, 1);
 });
+
+test('runtime instrumentation rejects map centers outside valid ranges', async (t) => {
+    const browser = await chromium.launch({ headless: true });
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    await page.addInitScript(installRuntimeInstrumentation);
+    await page.goto('data:text/html,<canvas id="map"></canvas>');
+    const result = await page.evaluate(() => {
+        window.mapboxgl = { Map: class {} };
+        new window.mapboxgl.Map();
+        return {
+            lng: window.__layaRuntime.invoke('map.center', { lng: 180.1, lat: 0 }),
+            lat: window.__layaRuntime.invoke('map.center', { lng: 0, lat: -90.1 }),
+        };
+    });
+    assert.equal(result.lng.__layaRuntimeError.code, 'invalid-command');
+    assert.equal(result.lat.__layaRuntimeError.code, 'invalid-command');
+});

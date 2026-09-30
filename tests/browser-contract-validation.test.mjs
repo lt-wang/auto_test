@@ -42,12 +42,30 @@ test('runtime commands validate target ids and finite map arguments', () => {
         { lng: '1', lat: 2 },
         { lng: Number.NaN, lat: 2 },
         { lng: 1, lat: Number.POSITIVE_INFINITY },
+        { lng: 180.1, lat: 0 },
+        { lng: -180.1, lat: 0 },
+        { lng: 0, lat: 90.1 },
+        { lng: 0, lat: -90.1 },
     ]) {
         assert.throws(
             () => validateCommand({ kind: 'runtime', action: 'map.center', args }),
             (error) => error instanceof BrowserContractError && error.code === 'invalid-command',
         );
     }
+    assert.doesNotThrow(() =>
+        validateCommand({
+            kind: 'runtime',
+            action: 'map.center',
+            args: { lng: 180, lat: 90 },
+        }),
+    );
+    assert.doesNotThrow(() =>
+        validateCommand({
+            kind: 'runtime',
+            action: 'map.center',
+            args: { lng: -180, lat: -90 },
+        }),
+    );
     for (const args of [undefined, {}, { zoom: '11' }, { zoom: Number.NaN }]) {
         assert.throws(
             () => validateCommand({ kind: 'runtime', action: 'map.zoom', args }),

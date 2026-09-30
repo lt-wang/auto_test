@@ -18,6 +18,7 @@ test('visualDiff matches identical baseline and reports changed pixels', async (
     });
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'laya-visual-'));
     const baseline = path.join(dir, 'baseline.png');
+    const visualDir = path.join(dir, 'visual');
     const png = new PNG({ width: 20, height: 20 });
     png.data.fill(255);
     await fs.writeFile(baseline, PNG.sync.write(png));
@@ -29,9 +30,13 @@ test('visualDiff matches identical baseline and reports changed pixels', async (
         const result = await waitForPlaywrightCondition(
             page,
             { kind: 'visualDiff', baseline, threshold: 0.1 },
-            { timeout: 1000, interval: 10 },
+            { timeout: 1000, interval: 10, visualDir },
         );
         assert.equal(result.matched, true);
+        assert.equal(result.changed, 0);
+        assert.equal(result.changedRatio, 0);
+        assert.equal(result.score, 0);
+        await Promise.all(Object.values(result.artifacts).map((file) => fs.access(file)));
     } finally {
         await browser.close();
         await new Promise((resolve) => server.close(resolve));
@@ -91,6 +96,7 @@ test('visualDiff fails at the maximum accepted threshold when pixels change', as
     });
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'laya-visual-mismatch-'));
     const baseline = path.join(dir, 'baseline.png');
+    const visualDir = path.join(dir, 'visual');
     const png = new PNG({ width: 20, height: 20 });
     png.data.fill(0);
     await fs.writeFile(baseline, PNG.sync.write(png));
@@ -99,15 +105,22 @@ test('visualDiff fails at the maximum accepted threshold when pixels change', as
     try {
         const { port } = server.address();
         await page.goto(`http://127.0.0.1:${port}/`);
-        await assert.rejects(
-            () =>
-                waitForPlaywrightCondition(
-                    page,
-                    { kind: 'visualDiff', baseline, threshold: 0.9 },
-                    { timeout: 50, interval: 10 },
-                ),
-            (error) => error.code === 'wait-timeout',
-        );
+        let failure;
+        try {
+            await waitForPlaywrightCondition(
+                page,
+                { kind: 'visualDiff', baseline, threshold: 0.9 },
+                { timeout: 50, interval: 10, visualDir },
+            );
+            assert.fail('expected visualDiff to time out');
+        } catch (error) {
+            failure = error;
+        }
+        assert.equal(failure.code, 'wait-timeout');
+        assert.equal(failure.changed, 400);
+        assert.equal(failure.changedRatio, 1);
+        assert.equal(failure.score, 1);
+        await Promise.all(Object.values(failure.artifacts).map((file) => fs.access(file)));
     } finally {
         await browser.close();
         await new Promise((resolve) => server.close(resolve));

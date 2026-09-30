@@ -1,10 +1,14 @@
 # Web Component Adapter Implementation Plan
 
+> **Review correction (2026-09-30):** Component metadata is detected directly in
+> `lib/browser/playwright-snapshot.mjs`. An earlier adapter-registry proposal was removed;
+> Task 1 below records the direct snapshot/Mantine fixture coverage instead.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extend LayaPilot’s browser driver so Mantine 8 and Canvas-based Web components can be observed, operated, and asserted without changing the target frontend repository.
 
-**Architecture:** Keep `BrowserSession` as the public boundary. Add adapter enrichment, synthetic identity resolution, safe Tooltip label discovery, Mantine overlay handling, file/pointer/runtime commands, and visual assertions behind that boundary. Existing workbook generation and replay continue to consume normalized snapshots rather than raw selectors.
+**Architecture:** Keep `BrowserSession` as the public boundary. Add direct component detection metadata, synthetic identity resolution, safe Tooltip label discovery, Mantine overlay handling, file/pointer/runtime commands, and visual assertions behind that boundary. Existing workbook generation and replay continue to consume normalized snapshots rather than raw selectors.
 
 **Tech Stack:** Node.js 20+, Playwright 1.62, browser-use through CDP, Mantine 8 target DOM conventions, Node built-in `crypto`, `pixelmatch`, `pngjs`.
 
@@ -32,159 +36,11 @@
 
 ---
 
-### Task 1: Adapter contract and registry
+### Task 1: Direct adapter metadata
 
-**Files:**
+**Final implementation:** `lib/browser/playwright-snapshot.mjs` detects component metadata directly while normalizing controls. There is no adapter registry or registration API.
 
-- Create: `lib/browser/adapters/registry.mjs`
-- Modify: `lib/browser/contract.mjs`
-- Test: `tests/browser-adapters.test.mjs`
-
-**Interfaces:**
-
-- Consumes: raw control descriptors from `playwright-snapshot.mjs`.
-- Produces: `createAdapterRegistry(adapters = [])` returning `{ register(adapter), describe(element, context) }`.
-- Adapter shape: `{ id: string, match(element, context): boolean, describe(element, context): object }`.
-- New public control fields: `component`, `adapter`, `testId`, `expanded`, `layer`, `iconFingerprint`.
-
-- [ ] **Step 1: Write the failing test**
-
-```js
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { createAdapterRegistry } from '../lib/browser/adapters/registry.mjs';
-import { toPublicSnapshot } from '../lib/browser/contract.mjs';
-
-test('adapter registry returns first matching descriptor', () => {
-    const registry = createAdapterRegistry([
-        {
-            id: 'mantine-select',
-            match: (element) => element.dataset.mantine === 'select',
-            describe: () => ({ component: 'select', expanded: true }),
-        },
-    ]);
-    const result = registry.describe({ dataset: { mantine: 'select' } }, {});
-    assert.deepEqual(result, {
-        adapter: 'mantine-select',
-        component: 'select',
-        expanded: true,
-    });
-});
-
-test('public snapshot preserves adapter metadata', () => {
-    const snapshot = toPublicSnapshot({
-        url: 'http://127.0.0.1/',
-        title: 'fixture',
-        controls: [
-            {
-                ref: 'r1',
-                frameRef: 'f0',
-                tag: 'button',
-                role: 'combobox',
-                name: '状态',
-                component: 'select',
-                adapter: 'mantine-select',
-                testId: 'status',
-                expanded: true,
-                layer: 'modal',
-                iconFingerprint: '',
-                visible: true,
-            },
-        ],
-        tables: [],
-        modal: null,
-        observedAt: new Date().toISOString(),
-    });
-    assert.equal(snapshot.controls[0].component, 'select');
-    assert.equal(snapshot.controls[0].adapter, 'mantine-select');
-    assert.equal(snapshot.controls[0].testId, 'status');
-    assert.equal(snapshot.controls[0].expanded, true);
-});
-```
-
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run:
-
-```bash
-node --test tests/browser-adapters.test.mjs
-```
-
-Expected: module-not-found for `lib/browser/adapters/registry.mjs`.
-
-- [ ] **Step 3: Implement the registry**
-
-Create `lib/browser/adapters/registry.mjs`:
-
-```js
-export function createAdapterRegistry(adapters = []) {
-    const ordered = [...adapters];
-
-    return {
-        register(adapter) {
-            ordered.push(adapter);
-            return adapter.id;
-        },
-        describe(element, context = {}) {
-            for (const adapter of ordered) {
-                if (!adapter.match(element, context)) continue;
-                const descriptor = adapter.describe(element, context) || {};
-                return { adapter: adapter.id, ...descriptor };
-            }
-            return null;
-        },
-    };
-}
-```
-
-- [ ] **Step 4: Extend the contract**
-
-In `lib/browser/contract.mjs`, add these names to `CONTROL_FIELDS`:
-
-```js
-'component',
-'adapter',
-'testId',
-'expanded',
-'layer',
-'iconFingerprint',
-```
-
-Add these states to `CONTROL_STATES`:
-
-```js
-'expanded',
-'collapsed',
-```
-
-Extend `toPublicSnapshot()` control mapping:
-
-```js
-component: safeText(control.component || '', 80),
-adapter: safeText(control.adapter || '', 80),
-testId: safeText(control.testId || '', 160),
-expanded: Boolean(control.expanded),
-layer: safeText(control.layer || '', 80),
-iconFingerprint: safeText(control.iconFingerprint || '', 160),
-```
-
-- [ ] **Step 5: Run focused and full tests**
-
-Run:
-
-```bash
-node --test tests/browser-adapters.test.mjs tests/browser-contract-validation.test.mjs
-npm test
-```
-
-Expected: all tests pass.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add lib/browser/adapters/registry.mjs lib/browser/contract.mjs tests/browser-adapters.test.mjs
-git commit -m "feat: add browser component adapter contract"
-```
+Direct detection currently assigns `component`/`adapter` for Mantine Select, MultiSelect, DateInput, Button/ActionIcon, option, and menu items; `component='canvas'` for canvas controls; and `component='selector-dialog'` for native/ARIA modal table/tree selection dialogs. Public snapshot fields `component`, `adapter`, `testId`, `expanded`, and `layer` are covered by `tests/browser-playwright-snapshot.test.mjs`, `tests/browser-mantine-snapshot.test.mjs`, and `tests/browser-custom-selectors.test.mjs`.
 
 ---
 
@@ -2090,8 +1946,9 @@ Create `docs/browser-component-adapters.md` with sections:
 - FileUpload/FileButton
 - GridSelector, TableSelector, OrgTreeSelector
 - DndList
-- Canvas, ECharts, Mapbox, QRCode
-- Video/HLS/MPEGTS
+- Canvas, ECharts, Mapbox
+- QR codes rendered to a canvas only through generic screenshots; no QR decoding
+- Video/HLS/MPEGTS through generic visible screenshots only; no media-specific support
 
 ## Failure policy
 

@@ -36,9 +36,14 @@ test('Mantine modals, portals, options, menus and errors are observable', async 
 
     snapshot = await session.snapshot();
     assert.equal(snapshot.modal.name, '编辑客户');
+    assert.equal(snapshot.modal.role, 'dialog');
+    assert.equal(snapshot.modal.ariaModal, true);
     const status = snapshot.controls.find((control) => control.name === '状态');
     assert.equal(status.component, 'select');
     assert.equal(status.expanded, false);
+    const save = snapshot.controls.find((control) => control.name === '保存');
+    assert.equal(save.adapter, 'mantine');
+    assert.equal(save.component, 'button');
 
     const menu = snapshot.controls.find((control) => control.name === '更多');
     await session.act({ kind: 'click', ref: menu.ref });

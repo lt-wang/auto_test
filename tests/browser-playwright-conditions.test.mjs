@@ -87,3 +87,33 @@ test('ambiguous semantic queries fail instead of matching the first control', as
         await new Promise((resolve) => server.close(resolve));
     }
 });
+
+test('collapsed state requires an explicit false aria-expanded value', async () => {
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end('<button>保存</button><button aria-expanded="false">展开筛选</button>');
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+        const { port } = server.address();
+        await page.goto(`http://127.0.0.1:${port}/`);
+        await waitForPlaywrightCondition(
+            page,
+            { kind: 'controlState', query: { name: '展开筛选' }, state: 'collapsed' },
+            { timeout: 500, interval: 10 },
+        );
+        await assert.rejects(
+            waitForPlaywrightCondition(
+                page,
+                { kind: 'controlState', query: { name: '保存' }, state: 'collapsed' },
+                { timeout: 50, interval: 10 },
+            ),
+            (error) => error.code === 'wait-timeout',
+        );
+    } finally {
+        await browser.close();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});

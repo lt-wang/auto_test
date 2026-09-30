@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { controlHandle } from '../lib/dom.mjs';
 import {
     snapshotFindLooseInput,
     snapshotFormErrors,
@@ -73,4 +74,30 @@ test('snapshot form errors and options use normalized controls', () => {
         options.map((item) => item.name),
         ['已完成'],
     );
+});
+
+test('session control handle matches re-snapshotted controls by row identity', async () => {
+    const controls = [
+        control({
+            ref: 'r1',
+            rowKey: 'customer-a',
+            context: '客户 A',
+            value: '100',
+        }),
+        control({
+            ref: 'r2',
+            rowKey: 'customer-b',
+            context: '客户 B',
+            value: '200',
+        }),
+    ];
+    const source = {
+        async snapshot() {
+            return { controls };
+        },
+    };
+
+    const handle = controlHandle(source, controls[1]);
+
+    assert.equal(await handle.inputValue(), '200');
 });
