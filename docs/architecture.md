@@ -8,9 +8,11 @@ The decision boundary is `choose(state, criteria, meta)`, returning a choice amo
 
 The workbook contract is in `lib/workflow_excel.py`. The visible 17 columns are human readable; `__laya_steps__` contains a structured, validated replay plan. The digest binds the visible case ID, title, preconditions, steps and expected result to the plan. The generated Excel is a test artifact, not arbitrary executable code.
 
-Current UI coverage is strongest for semantic HTML plus Ant Design, Element and TNTD conventions. A new component family should extend observation and form rules, then add a browser fixture test. Keep company-specific selectors, URLs, credentials and data preparation in a separate private adapter repository rather than this public core.
+Current UI coverage includes semantic HTML plus Ant Design, Element, TNTD, and Mantine 8 conventions. The browser component adapter layer enriches normalized controls with optional `component`, `adapter`, `testId`, `expanded`, `layer`, and `iconFingerprint` metadata, and covers Mantine controls and overlays, file uploads, selector dialogs, drag lists, and runtime-bridged Canvas/ECharts/Mapbox. A new component family should extend observation and form rules, then add a browser fixture test. Keep company-specific selectors, URLs, credentials and data preparation in a separate private adapter repository rather than this public core.
 
 The browser contract foundation lives in `lib/browser/`. It provides normalized snapshots, opaque refs, semantic commands and conditions, capability reporting, and normalized events. `openBrowserSession()` is the production browser entry point. The public demo has passed generation and replay through the contract.
+
+Component adapters and runtime instrumentation are Web-only. They operate on the browser DOM and injected browser-side observers; the target frontend repository is not modified. Tauri native windows, WebView2, OS file dialogs, SQLite, offline sync, and Rust code are out of scope. Ambiguous controls fail closed with `ambiguous-query`, and Canvas controls without a bridge fail with `unsupported-capability`. Closed Shadow DOM remains unsupported. See `docs/browser-component-adapters.md`.
 
 Jev decisions use `lib/decision/jev-provider.mjs` and the official `@typesafe-ai/sdk`. The provider boundary validates choice/probability responses before the engine sees them.
 
