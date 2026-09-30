@@ -56,16 +56,17 @@ test('runtime commands validate target ids and finite map arguments', () => {
     }
 });
 
-test('visualDiff threshold must be a finite number between zero and one', () => {
+test('visualDiff threshold must be a finite number in [0, 1)', () => {
     assert.equal(
         validateCondition({ kind: 'visualDiff', baseline: 'baseline.png', threshold: 0 }).threshold,
         0,
     );
     assert.equal(
-        validateCondition({ kind: 'visualDiff', baseline: 'baseline.png', threshold: 1 }).threshold,
-        1,
+        validateCondition({ kind: 'visualDiff', baseline: 'baseline.png', threshold: 0.9 })
+            .threshold,
+        0.9,
     );
-    for (const threshold of [-0.01, 1.01, Number.NaN, Number.POSITIVE_INFINITY, '0.1']) {
+    for (const threshold of [-0.01, 1, 1.01, Number.NaN, Number.POSITIVE_INFINITY, '0.1']) {
         assert.throws(
             () =>
                 validateCondition({

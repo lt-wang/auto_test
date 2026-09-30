@@ -81,7 +81,7 @@ test('visualDiff resolves a plain canvas through an opaque snapshot ref', async 
     }
 });
 
-test('visualDiff fails when changed pixels exceed the threshold', async () => {
+test('visualDiff fails at the maximum accepted threshold when pixels change', async () => {
     const server = await import('node:http').then(({ default: http }) => {
         const instance = http.createServer((request, response) => {
             response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -103,7 +103,7 @@ test('visualDiff fails when changed pixels exceed the threshold', async () => {
             () =>
                 waitForPlaywrightCondition(
                     page,
-                    { kind: 'visualDiff', baseline, threshold: 0.01 },
+                    { kind: 'visualDiff', baseline, threshold: 0.9 },
                     { timeout: 50, interval: 10 },
                 ),
             (error) => error.code === 'wait-timeout',
