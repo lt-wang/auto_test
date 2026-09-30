@@ -14,8 +14,18 @@ test('drag moves a draggable element to another element', async () => {
             <script>
                 const source = document.getElementById('source');
                 const target = document.getElementById('target');
+                target.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+                    target.dataset.dragover = 'true';
+                });
+                target.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    target.dataset.drop = 'true';
+                    target.textContent = '已放置';
+                });
                 source.addEventListener('dragend', () => {
-                    target.textContent = '已移动';
+                    target.dataset.dragEndSawDrop = target.dataset.drop === 'true' ? 'true' : 'false';
+                    target.textContent = target.dataset.dragEndSawDrop === 'true' ? '已移动' : '未收到放置';
                 });
             </script>
         `);
@@ -39,6 +49,9 @@ test('drag moves a draggable element to another element', async () => {
             ref: source.ref,
             toRef: target.ref,
         });
+        assert.equal(await page.locator('#target').getAttribute('data-dragover'), 'true');
+        assert.equal(await page.locator('#target').getAttribute('data-drop'), 'true');
+        assert.equal(await page.locator('#target').getAttribute('data-drag-end-saw-drop'), 'true');
         assert.equal(await page.locator('#target').textContent(), '已移动');
     } finally {
         await browser.close();
