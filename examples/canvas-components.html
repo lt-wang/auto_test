@@ -8,11 +8,12 @@
         <canvas id="chart" width="320" height="180"></canvas>
         <canvas id="map" width="320" height="180"></canvas>
         <script>
-            window.echarts = {
-                init: () => ({
-                    getOption: () => ({ series: [{ type: 'line' }] }),
-                }),
-            };
+            // Mirrors the real ECharts UMD bundle: assign an empty namespace
+            // first, then populate init on it afterwards.
+            window.echarts = {};
+            window.echarts.init = () => ({
+                getOption: () => ({ series: [{ type: 'line' }] }),
+            });
             window.mapboxgl = {
                 Map: class {
                     constructor() {
