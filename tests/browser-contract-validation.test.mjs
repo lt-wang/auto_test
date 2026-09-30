@@ -19,6 +19,65 @@ test('commands reject raw selectors and require opaque refs', () => {
     });
 });
 
+test('runtime commands validate target ids and finite map arguments', () => {
+    assert.deepEqual(
+        validateCommand({
+            kind: 'runtime',
+            action: 'map.center',
+            args: { id: 'map-1', lng: 116.397, lat: 39.908 },
+        }),
+        {
+            kind: 'runtime',
+            action: 'map.center',
+            args: { id: 'map-1', lng: 116.397, lat: 39.908 },
+        },
+    );
+    assert.doesNotThrow(() =>
+        validateCommand({ kind: 'runtime', action: 'map.zoom', args: { zoom: 11 } }),
+    );
+    for (const args of [
+        undefined,
+        {},
+        { lng: 1 },
+        { lng: '1', lat: 2 },
+        { lng: Number.NaN, lat: 2 },
+        { lng: 1, lat: Number.POSITIVE_INFINITY },
+    ]) {
+        assert.throws(
+            () => validateCommand({ kind: 'runtime', action: 'map.center', args }),
+            (error) => error instanceof BrowserContractError && error.code === 'invalid-command',
+        );
+    }
+    for (const args of [undefined, {}, { zoom: '11' }, { zoom: Number.NaN }]) {
+        assert.throws(
+            () => validateCommand({ kind: 'runtime', action: 'map.zoom', args }),
+            (error) => error instanceof BrowserContractError && error.code === 'invalid-command',
+        );
+    }
+});
+
+test('visualDiff threshold must be a finite number between zero and one', () => {
+    assert.equal(
+        validateCondition({ kind: 'visualDiff', baseline: 'baseline.png', threshold: 0 }).threshold,
+        0,
+    );
+    assert.equal(
+        validateCondition({ kind: 'visualDiff', baseline: 'baseline.png', threshold: 1 }).threshold,
+        1,
+    );
+    for (const threshold of [-0.01, 1.01, Number.NaN, Number.POSITIVE_INFINITY, '0.1']) {
+        assert.throws(
+            () =>
+                validateCondition({
+                    kind: 'visualDiff',
+                    baseline: 'baseline.png',
+                    threshold,
+                }),
+            (error) => error instanceof BrowserContractError && error.code === 'invalid-condition',
+        );
+    }
+});
+
 test('conditions require semantic queries and valid states', () => {
     assert.deepEqual(
         validateCondition({
