@@ -8,6 +8,10 @@ const mantineComponents = await fs.readFile(
     new URL('./mantine-components.html', import.meta.url),
     'utf8',
 );
+const canvasComponents = await fs.readFile(
+    new URL('./canvas-components.html', import.meta.url),
+    'utf8',
+);
 http.createServer((req, res) => {
     if (req.url === '/favicon.ico') {
         res.writeHead(204);
@@ -22,6 +26,11 @@ http.createServer((req, res) => {
     if (req.url === '/mantine-components') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(mantineComponents);
+        return;
+    }
+    if (req.url === '/canvas-components') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(canvasComponents);
         return;
     }
     if (req.url === '/api/save-fail') {

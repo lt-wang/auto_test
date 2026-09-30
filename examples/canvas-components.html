@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <title>Canvas Adapter Fixture</title>
+    </head>
+    <body>
+        <canvas id="chart" width="320" height="180"></canvas>
+        <canvas id="map" width="320" height="180"></canvas>
+        <script>
+            window.echarts = {
+                init: () => ({
+                    getOption: () => ({ series: [{ type: 'line' }] }),
+                }),
+            };
+            window.mapboxgl = {
+                Map: class {
+                    constructor() {
+                        this.center = { lng: 116.397, lat: 39.908 };
+                        this.zoom = 11;
+                    }
+                },
+            };
+        </script>
+        <script>
+            window.chartInstance = window.echarts.init(document.getElementById('chart'));
+            window.mapInstance = new window.mapboxgl.Map({ container: 'map' });
+        </script>
+    </body>
+</html>
